@@ -15,7 +15,9 @@ const PatientModel = require('../models/Patient');
 const getAllPatients = async (req, res, next) => {
     try {
         const { search = '', doctor_id = '', gender = '' } = req.query;
-        const patients = await PatientModel.findAll({ search, doctor_id, gender });
+        // Clinician can only see patients assigned to them
+        const filterDoctorId = req.user.role === 'clinician' ? req.user.doctor_id : doctor_id;
+        const patients = await PatientModel.findAll({ search, doctor_id: filterDoctorId, gender });
         res.status(200).json({ success: true, count: patients.length, data: patients });
     } catch (err) {
         next(err);
@@ -28,6 +30,9 @@ const getPatientById = async (req, res, next) => {
         const patient = await PatientModel.findById(req.params.id);
         if (!patient) {
             return res.status(404).json({ success: false, message: `Patient with id ${req.params.id} not found.` });
+        }
+        if (req.user.role === 'clinician' && patient.doctor_id !== req.user.doctor_id) {
+            return res.status(403).json({ success: false, message: 'Access denied: not your patient.' });
         }
         res.status(200).json({ success: true, data: patient });
     } catch (err) {
@@ -88,6 +93,17 @@ const createPatient = async (req, res, next) => {
 /** PUT /api/patients/:id — update patient details */
 const updatePatient = async (req, res, next) => {
     try {
+        // Clinician can only update their own patients
+        if (req.user.role === 'clinician') {
+            const existing = await PatientModel.findById(req.params.id);
+            if (!existing) {
+                return res.status(404).json({ success: false, message: `Patient with id ${req.params.id} not found.` });
+            }
+            if (existing.doctor_id !== req.user.doctor_id) {
+                return res.status(403).json({ success: false, message: 'Access denied: not your patient.' });
+            }
+        }
+
         const { name, dob, phone, gender, doctor_id } = req.body;
 
         const validGenders = ['Male', 'Female', 'Other'];

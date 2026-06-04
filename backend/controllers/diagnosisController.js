@@ -12,6 +12,7 @@
  */
 
 const DiagnosisModel = require('../models/Diagnosis');
+const PatientModel   = require('../models/Patient');
 
 /**
  * GET /api/diagnoses
@@ -24,7 +25,9 @@ const DiagnosisModel = require('../models/Diagnosis');
 const getAllDiagnoses = async (req, res, next) => {
     try {
         const { patient_id = '', severity = '', icd_code = '', search = '' } = req.query;
-        const diagnoses = await DiagnosisModel.findAll({ patient_id, severity, icd_code, search });
+        // Clinician sees only diagnoses for their own patients
+        const filterDoctorId = req.user.role === 'clinician' ? req.user.doctor_id : '';
+        const diagnoses = await DiagnosisModel.findAll({ patient_id, severity, icd_code, search, doctor_id: filterDoctorId });
         res.status(200).json({ success: true, count: diagnoses.length, data: diagnoses });
     } catch (err) {
         next(err);
@@ -37,6 +40,12 @@ const getDiagnosisById = async (req, res, next) => {
         const diagnosis = await DiagnosisModel.findById(req.params.id);
         if (!diagnosis) {
             return res.status(404).json({ success: false, message: `Diagnosis with id ${req.params.id} not found.` });
+        }
+        if (req.user.role === 'clinician') {
+            const patient = await PatientModel.findById(diagnosis.patient_id);
+            if (!patient || patient.doctor_id !== req.user.doctor_id) {
+                return res.status(403).json({ success: false, message: 'Access denied.' });
+            }
         }
         res.status(200).json({ success: true, data: diagnosis });
     } catch (err) {
@@ -82,6 +91,18 @@ const createDiagnosis = async (req, res, next) => {
 /** PUT /api/diagnoses/:id */
 const updateDiagnosis = async (req, res, next) => {
     try {
+        // Clinician can only update diagnoses belonging to their patients
+        if (req.user.role === 'clinician') {
+            const existing = await DiagnosisModel.findById(req.params.id);
+            if (!existing) {
+                return res.status(404).json({ success: false, message: `Diagnosis with id ${req.params.id} not found.` });
+            }
+            const patient = await PatientModel.findById(existing.patient_id);
+            if (!patient || patient.doctor_id !== req.user.doctor_id) {
+                return res.status(403).json({ success: false, message: 'Access denied.' });
+            }
+        }
+
         const { icd_code, description, severity_level, diagnosed_at, notes } = req.body;
 
         const validSeverities = ['Low', 'Medium', 'High'];

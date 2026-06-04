@@ -67,8 +67,8 @@
             <a href="#" class="nav-item" data-view="patients">
                 <i data-feather="users"></i> <span>Patients</span>
             </a>
-            <!-- Admin + Clinician + Receptionist (read-only for receptionist) -->
-            <a href="#" class="nav-item" data-view="doctors" data-roles="admin,clinician,receptionist">
+            <!-- Admin + Receptionist only (clinicians don't need the doctors list) -->
+            <a href="#" class="nav-item" data-view="doctors" data-roles="admin,receptionist">
                 <i data-feather="user-check"></i> <span>Doctors</span>
             </a>
             <!-- Admin + Clinician only -->
@@ -192,7 +192,7 @@
                     <option>Medium</option>
                     <option>High</option>
                 </select>
-                <button class="btn btn-primary" id="add-diagnosis-btn" data-roles="admin,clinician">
+                <button class="btn btn-primary" id="add-diagnosis-btn" data-roles="admin">
                     <i data-feather="plus"></i> Add Diagnosis
                 </button>
             </div>

@@ -26,7 +26,7 @@ router.use(protect);
 router.get('/',    authorize('admin', 'clinician'), getAllDiagnoses);
 router.get('/:id', authorize('admin', 'clinician'), getDiagnosisById);
 
-router.post('/',    authorize('admin', 'clinician'), createDiagnosis);
+router.post('/',    authorize('admin'),              createDiagnosis);
 router.put('/:id',  authorize('admin', 'clinician'), updateDiagnosis);
 router.delete('/:id', authorize('admin'),            deleteDiagnosis);
 

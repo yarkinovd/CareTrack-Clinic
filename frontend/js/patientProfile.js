@@ -21,7 +21,8 @@ const PatientProfile = (() => {
             const profile = res.data;
 
             const { patient, doctor, diagnoses } = profile;
-            const canClinician = Auth.can('admin', 'clinician');
+            const canEditPatient  = Auth.can('admin', 'clinician');
+            const canAddDiagnosis = Auth.can('admin');
 
             container.innerHTML = `
                 <!-- ── Patient header ────────────────────────────── -->
@@ -31,10 +32,12 @@ const PatientProfile = (() => {
                         <p class="text-muted text-sm">Patient #${patient.id} · Registered ${formatDate(patient.registered_at)}</p>
                     </div>
                     <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-                        ${canClinician ? `
+                        ${canEditPatient ? `
                             <button class="btn btn-secondary" onclick="Patients.openEditModal(${patient.id})">
                                 <i data-feather="edit-2"></i> Edit Patient
                             </button>
+                        ` : ''}
+                        ${canAddDiagnosis ? `
                             <button class="btn btn-primary" onclick="Diagnoses.openAddModal(${patient.id})">
                                 <i data-feather="plus"></i> Add Diagnosis
                             </button>

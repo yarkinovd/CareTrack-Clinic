@@ -10,7 +10,7 @@ const DiagnosisModel = {
      * List diagnoses with optional filtering.
      * Joins patient name for context in the list view.
      */
-    async findAll({ patient_id = '', severity = '', icd_code = '', search = '' } = {}) {
+    async findAll({ patient_id = '', severity = '', icd_code = '', search = '', doctor_id = '' } = {}) {
         const conditions = [];
         const values     = [];
 
@@ -29,6 +29,10 @@ const DiagnosisModel = {
         if (search) {
             values.push(`%${search}%`);
             conditions.push(`(d.description ILIKE $${values.length} OR d.icd_code ILIKE $${values.length})`);
+        }
+        if (doctor_id) {
+            values.push(Number(doctor_id));
+            conditions.push(`p.doctor_id = $${values.length}`);
         }
 
         const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';

@@ -22,8 +22,8 @@ const router = express.Router();
 // All doctor routes require at minimum a valid token
 router.use(protect);
 
-router.get('/',    authorize('admin', 'clinician', 'receptionist'), getAllDoctors);
-router.get('/:id', authorize('admin', 'clinician', 'receptionist'), getDoctorById);
+router.get('/',    authorize('admin', 'receptionist'), getAllDoctors);
+router.get('/:id', authorize('admin', 'receptionist'), getDoctorById);
 
 router.post('/',    authorize('admin'), createDoctor);
 router.put('/:id',  authorize('admin'), updateDoctor);

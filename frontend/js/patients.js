@@ -97,8 +97,12 @@ const Patients = (() => {
 
     const openEditModal = async (id) => {
         Modal.open({ title: 'Edit Patient', body: loadingHTML(), onConfirm: () => handleUpdate(id) });
-        const [patRes, doctors] = await Promise.all([Api.patients.getOne(id), fetchDoctors()]);
-        Modal.setBody(formHTML(patRes.data, doctors));
+        const isClinician = Auth.getUser()?.role === 'clinician';
+        const [patRes, doctors] = await Promise.all([
+            Api.patients.getOne(id),
+            isClinician ? Promise.resolve([]) : fetchDoctors(),
+        ]);
+        Modal.setBody(formHTML(patRes.data, doctors, isClinician));
         renderIcons();
     };
 
@@ -164,7 +168,7 @@ const Patients = (() => {
         }
     };
 
-    const formHTML = (p = {}, doctors = []) => `
+    const formHTML = (p = {}, doctors = [], isClinician = false) => `
         <div class="form-group">
             <label>Full Name *</label>
             <input id="f-name" type="text" value="${escHtml(p.name || '')}" placeholder="e.g., Alice Thompson" required />
@@ -187,6 +191,7 @@ const Patients = (() => {
                 <label>Phone</label>
                 <input id="f-phone" type="text" value="${escHtml(p.phone || '')}" placeholder="+1-555-0100" />
             </div>
+            ${!isClinician ? `
             <div class="form-group">
                 <label>Assigned Doctor *</label>
                 <select id="f-doctor">
@@ -194,6 +199,7 @@ const Patients = (() => {
                     ${doctors.map((d) => `<option value="${d.id}" ${p.doctor_id === d.id ? 'selected' : ''}>${escHtml(d.name)} (${d.specialty})</option>`).join('')}
                 </select>
             </div>
+            ` : ''}
         </div>
         <div id="form-error" class="alert alert-error" hidden></div>
     `;
@@ -203,14 +209,23 @@ const Patients = (() => {
         const dob       = document.getElementById('f-dob')?.value;
         const gender    = document.getElementById('f-gender')?.value;
         const phone     = document.getElementById('f-phone')?.value.trim();
-        const doctor_id = document.getElementById('f-doctor')?.value;
+        const doctorEl  = document.getElementById('f-doctor');
+        const doctor_id = doctorEl?.value || '';
 
-        if (!name || !dob || !gender || !doctor_id) {
+        const requiresDoctor = !!doctorEl;
+        if (!name || !dob || !gender || (requiresDoctor && !doctor_id)) {
             const err = document.getElementById('form-error');
-            if (err) { err.textContent = 'Name, date of birth, gender, and doctor are required.'; err.hidden = false; }
+            if (err) {
+                err.textContent = requiresDoctor
+                    ? 'Name, date of birth, gender, and doctor are required.'
+                    : 'Name, date of birth, and gender are required.';
+                err.hidden = false;
+            }
             return null;
         }
-        return { name, dob, phone, gender, doctor_id: Number(doctor_id) };
+        const body = { name, dob, phone, gender };
+        if (doctor_id) body.doctor_id = Number(doctor_id);
+        return body;
     };
 
     return { render, openAddModal, openEditModal, confirmDelete };

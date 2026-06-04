@@ -24,9 +24,9 @@ const login = async (req, res, next) => {
             });
         }
 
-        // Fetch user by username
+        // Fetch user by username (include doctor_id for clinician filtering)
         const result = await query(
-            'SELECT id, username, email, password_hash, role, is_active FROM users WHERE username = $1',
+            'SELECT id, username, email, password_hash, role, is_active, doctor_id FROM users WHERE username = $1',
             [username]
         );
 
@@ -56,9 +56,8 @@ const login = async (req, res, next) => {
             });
         }
 
-        // Sign token — embed only the minimum needed payload
         const token = jwt.sign(
-            { id: user.id, username: user.username, role: user.role },
+            { id: user.id, username: user.username, role: user.role, doctor_id: user.doctor_id || null },
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
         );
@@ -68,10 +67,11 @@ const login = async (req, res, next) => {
             message: 'Login successful.',
             token,
             user: {
-                id:       user.id,
-                username: user.username,
-                email:    user.email,
-                role:     user.role,
+                id:        user.id,
+                username:  user.username,
+                email:     user.email,
+                role:      user.role,
+                doctor_id: user.doctor_id || null,
             },
         });
     } catch (err) {

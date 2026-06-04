@@ -84,6 +84,16 @@ const seedUsers = async (client) => {
             console.log(`[DB] Seeded user: ${u.username} (${u.role})`);
         }
     }
+
+    // Link dr_wilson to Dr. James Okonkwo so patient filtering works
+    const wilsonRes = await client.query("SELECT id FROM users WHERE username = 'dr_wilson'");
+    const jamesRes  = await client.query("SELECT id FROM doctors WHERE name = 'Dr. James Okonkwo' LIMIT 1");
+    if (wilsonRes.rows.length && jamesRes.rows.length) {
+        await client.query(
+            'UPDATE users SET doctor_id = $1 WHERE id = $2 AND doctor_id IS NULL',
+            [jamesRes.rows[0].id, wilsonRes.rows[0].id]
+        );
+    }
 };
 
 const query     = (text, params) => pool.query(text, params);

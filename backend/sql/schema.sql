@@ -165,3 +165,9 @@ END $$;
 
 -- Prevent future duplicate doctors (idempotent)
 CREATE UNIQUE INDEX IF NOT EXISTS uq_doctors_name ON doctors(name);
+
+-- =============================================================================
+-- MIGRATION: link clinician users to their doctor record
+-- =============================================================================
+ALTER TABLE users ADD COLUMN IF NOT EXISTS
+    doctor_id INTEGER REFERENCES doctors(id) ON DELETE SET NULL;

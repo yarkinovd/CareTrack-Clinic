@@ -10,11 +10,9 @@
  * Usage: const doctors = await Api.doctors.getAll({ search: 'Smith' });
  */
 
-// The backend base URL. In production, change this to your Render service URL
-// or set it dynamically if the frontend is served by the same Express server.
 const API_BASE = window.location.hostname === 'localhost'
     ? 'http://localhost:5000/api'
-    : `${window.location.origin}/api`;
+    : 'https://diplomatic-wisdom-production-bfa5.up.railway.app/api';
 
 // ─── Core Request Helper ──────────────────────────────────────────────────
 

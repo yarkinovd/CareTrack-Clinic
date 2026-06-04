@@ -4,7 +4,9 @@
  * Route-level RBAC: only 'admin' can write; all authenticated roles can read.
  */
 
+const bcrypt      = require('bcryptjs');
 const DoctorModel = require('../models/Doctor');
+const { getClient } = require('../config/db');
 
 /** GET /api/doctors  — list with optional ?search= and ?specialty= */
 const getAllDoctors = async (req, res, next) => {
@@ -32,33 +34,56 @@ const getDoctorById = async (req, res, next) => {
     }
 };
 
-/** POST /api/doctors — create a new doctor (admin only) */
+/** POST /api/doctors — create a new doctor + linked clinician account (admin only) */
 const createDoctor = async (req, res, next) => {
     try {
-        const { name, specialty, department, contact_info } = req.body;
+        const { name, specialty, department, contact_info, username, password } = req.body;
 
         if (!name || !specialty || !department) {
-            return res.status(400).json({
-                success: false,
-                message: 'name, specialty, and department are required.',
-            });
+            return res.status(400).json({ success: false, message: 'name, specialty, and department are required.' });
+        }
+        if (!username || !password) {
+            return res.status(400).json({ success: false, message: 'username and password are required to create a login account.' });
         }
 
         const validSpecialties = ['Cardiology', 'Neurology', 'Dermatology', 'Orthopedics', 'General Practice'];
         if (!validSpecialties.includes(specialty)) {
-            return res.status(400).json({
-                success: false,
-                message: `specialty must be one of: ${validSpecialties.join(', ')}.`,
-            });
+            return res.status(400).json({ success: false, message: `specialty must be one of: ${validSpecialties.join(', ')}.` });
         }
 
-        // Ensure contact_info is either an object or defaults to {}
-        const contactData = (typeof contact_info === 'object' && contact_info !== null)
-            ? contact_info
-            : {};
+        const contactData = (typeof contact_info === 'object' && contact_info !== null) ? contact_info : {};
+        const loginEmail  = contactData.email || null;
 
-        const doctor = await DoctorModel.create({ name, specialty, department, contact_info: JSON.stringify(contactData) });
-        res.status(201).json({ success: true, message: 'Doctor created successfully.', data: doctor });
+        const client = await getClient();
+        try {
+            await client.query('BEGIN');
+
+            const docRes = await client.query(
+                `INSERT INTO doctors (name, specialty, department, contact_info)
+                 VALUES ($1, $2, $3, $4)
+                 RETURNING id, name, specialty, department, contact_info, created_at, updated_at`,
+                [name, specialty, department, JSON.stringify(contactData)]
+            );
+            const doctor = docRes.rows[0];
+
+            const passwordHash = await bcrypt.hash(password, 10);
+            await client.query(
+                `INSERT INTO users (username, email, password_hash, role, doctor_id)
+                 VALUES ($1, $2, $3, 'clinician', $4)`,
+                [username, loginEmail, passwordHash, doctor.id]
+            );
+
+            await client.query('COMMIT');
+            res.status(201).json({ success: true, message: 'Doctor and login account created successfully.', data: doctor });
+        } catch (txErr) {
+            await client.query('ROLLBACK');
+            if (txErr.code === '23505') {
+                return res.status(409).json({ success: false, message: `Username "${username}" is already taken.` });
+            }
+            throw txErr;
+        } finally {
+            client.release();
+        }
     } catch (err) {
         next(err);
     }

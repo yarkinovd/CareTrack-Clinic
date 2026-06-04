@@ -89,7 +89,7 @@ const Doctors = (() => {
         try {
             const res = await Api.doctors.getOne(id);
             const d   = res.data;
-            Modal.setBody(formHTML(d));
+            Modal.setBody(formHTML(d, true));
             renderIcons();
         } catch (err) {
             Modal.setBody(errorHTML(err.message));
@@ -125,7 +125,7 @@ const Doctors = (() => {
     };
 
     const handleUpdate = async (id) => {
-        const body = collectForm();
+        const body = collectForm(true);
         if (!body) return;
         try {
             await Api.doctors.update(id, body);
@@ -150,7 +150,7 @@ const Doctors = (() => {
 
     // ── Form Helpers ──────────────────────────────────────────────────────
 
-    const formHTML = (d = {}) => {
+    const formHTML = (d = {}, isEdit = false) => {
         const specialties = ['Cardiology', 'Neurology', 'Dermatology', 'Orthopedics', 'General Practice'];
         const contact = d.contact_info || {};
         return `
@@ -184,11 +184,25 @@ const Doctors = (() => {
                 <label>Office Location</label>
                 <input id="f-office" type="text" value="${escHtml(contact.office || '')}" placeholder="Block A, Room 204" />
             </div>
+            ${!isEdit ? `
+            <hr style="margin:1rem 0;border:none;border-top:1px solid var(--color-border)" />
+            <p style="font-size:.8rem;font-weight:600;color:var(--color-text-muted);margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.05em">Login Account</p>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Username *</label>
+                    <input id="f-username" type="text" placeholder="e.g., dr_smith" />
+                </div>
+                <div class="form-group">
+                    <label>Password *</label>
+                    <input id="f-password" type="password" placeholder="Min 8 characters" />
+                </div>
+            </div>
+            ` : ''}
             <div id="form-error" class="alert alert-error" hidden></div>
         `;
     };
 
-    const collectForm = () => {
+    const collectForm = (isEdit = false) => {
         const name       = document.getElementById('f-name')?.value.trim();
         const specialty  = document.getElementById('f-specialty')?.value;
         const department = document.getElementById('f-department')?.value.trim();
@@ -202,10 +216,21 @@ const Doctors = (() => {
             return null;
         }
 
-        return {
-            name, specialty, department,
-            contact_info: { phone, email, office },
-        };
+        const body = { name, specialty, department, contact_info: { phone, email, office } };
+
+        if (!isEdit) {
+            const username = document.getElementById('f-username')?.value.trim();
+            const password = document.getElementById('f-password')?.value;
+            if (!username || !password) {
+                const err = document.getElementById('form-error');
+                if (err) { err.textContent = 'Username and password are required.'; err.hidden = false; }
+                return null;
+            }
+            body.username = username;
+            body.password = password;
+        }
+
+        return body;
     };
 
     return { render, openAddModal, openEditModal, confirmDelete };

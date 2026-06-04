@@ -27,7 +27,6 @@ const PatientModel = {
 
         const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-        // Include doctor name inline for the list view
         const sql = `
             SELECT
                 p.id,
@@ -39,10 +38,14 @@ const PatientModel = {
                 d.name       AS doctor_name,
                 d.specialty  AS doctor_specialty,
                 p.created_at,
-                p.updated_at
+                p.updated_at,
+                COUNT(dx.id) AS diagnosis_count
             FROM   patients p
             JOIN   doctors  d ON d.id = p.doctor_id
+            LEFT JOIN diagnoses dx ON dx.patient_id = p.id
             ${where}
+            GROUP BY p.id, p.name, p.dob, p.phone, p.gender, p.doctor_id,
+                     d.name, d.specialty, p.created_at, p.updated_at
             ORDER  BY p.name ASC
         `;
 
@@ -119,12 +122,13 @@ const PatientModel = {
         const row = patientResult.rows[0];
         return {
             patient: {
-                id:           row.patient_id,
-                name:         row.patient_name,
-                dob:          row.dob,
-                phone:        row.phone,
-                gender:       row.gender,
-                registered_at: row.registered_at,
+                id:              row.patient_id,
+                name:            row.patient_name,
+                dob:             row.dob,
+                phone:           row.phone,
+                gender:          row.gender,
+                registered_at:   row.registered_at,
+                diagnosis_count: diagnosisResult.rows.length,
             },
             doctor: {
                 id:         row.doctor_id,

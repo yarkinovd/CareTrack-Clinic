@@ -28,7 +28,12 @@ const PatientProfile = (() => {
                 <!-- ── Patient header ────────────────────────────── -->
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.5rem">
                     <div>
-                        <h2 style="font-size:1.4rem;font-weight:700">${escHtml(patient.name)}</h2>
+                        <h2 style="font-size:1.4rem;font-weight:700;display:flex;align-items:center;gap:.5rem">
+                            ${escHtml(patient.name)}
+                            ${patient.diagnosis_count > 0
+                                ? `<span class="badge badge-diagnosed">Diagnosed</span>`
+                                : `<span class="badge badge-pending">Pending</span>`}
+                        </h2>
                         <p class="text-muted text-sm">Patient #${patient.id} · Registered ${formatDate(patient.registered_at)}</p>
                     </div>
                     <div style="display:flex;gap:.5rem;flex-wrap:wrap">

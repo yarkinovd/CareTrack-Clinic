@@ -378,6 +378,8 @@ tbody td {
 .badge-low    { background: var(--color-success-light); color: var(--color-success); }
 .badge-medium { background: var(--color-warning-light); color: var(--color-warning); }
 .badge-high   { background: var(--color-danger-light);  color: var(--color-danger); }
+.badge-pending    { background: var(--color-warning-light); color: var(--color-warning); }
+.badge-diagnosed  { background: var(--color-success-light); color: var(--color-success); }
 .badge-specialty {
     background: var(--color-primary-light);
     color: var(--color-primary);

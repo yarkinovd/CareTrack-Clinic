@@ -79,18 +79,43 @@ const Diagnoses = (() => {
     // ── Modal: Add Diagnosis ──────────────────────────────────────────────
 
     const openAddModal = async (prefilledPatientId = null) => {
-        Modal.open({ title: 'Add Diagnosis', body: loadingHTML(), onConfirm: handleCreate });
-        const patients = await fetchPatients();
-        Modal.setBody(formHTML({ patient_id: prefilledPatientId }, patients));
+        const isClinician = Auth.getUser()?.role === 'clinician';
+
+        Modal.open({
+            title:     'Add Diagnosis',
+            body:      loadingHTML(),
+            onConfirm: () => handleCreate(prefilledPatientId),
+        });
+
+        if (prefilledPatientId && isClinician) {
+            // Clinician adding diagnosis from a patient profile — lock patient field
+            try {
+                const patRes = await Api.patients.getOne(prefilledPatientId);
+                Modal.setBody(formHTML({ patient_id: prefilledPatientId }, [], patRes.data.name));
+            } catch {
+                Modal.setBody(formHTML({ patient_id: prefilledPatientId }, []));
+            }
+        } else {
+            const patients = await fetchPatients();
+            Modal.setBody(formHTML({ patient_id: prefilledPatientId }, patients));
+        }
         renderIcons();
     };
 
     // ── Modal: Edit Diagnosis ─────────────────────────────────────────────
 
     const openEditModal = async (id) => {
+        const isClinician = Auth.getUser()?.role === 'clinician';
         Modal.open({ title: 'Edit Diagnosis', body: loadingHTML(), onConfirm: () => handleUpdate(id) });
-        const [dRes, patients] = await Promise.all([Api.diagnoses.getOne(id), fetchPatients()]);
-        Modal.setBody(formHTML(dRes.data, patients));
+
+        if (isClinician) {
+            const dRes = await Api.diagnoses.getOne(id);
+            const patRes = await Api.patients.getOne(dRes.data.patient_id);
+            Modal.setBody(formHTML(dRes.data, [], patRes.data.name));
+        } else {
+            const [dRes, patients] = await Promise.all([Api.diagnoses.getOne(id), fetchPatients()]);
+            Modal.setBody(formHTML(dRes.data, patients));
+        }
         renderIcons();
     };
 
@@ -108,14 +133,18 @@ const Diagnoses = (() => {
 
     // ── CRUD Handlers ─────────────────────────────────────────────────────
 
-    const handleCreate = async () => {
+    const handleCreate = async (patientId = null) => {
         const body = collectForm();
         if (!body) return;
         try {
             await Api.diagnoses.create(body);
             Modal.close();
             App.showAlert('Diagnosis recorded successfully.', 'success');
-            render();
+            if (patientId) {
+                PatientProfile.render(patientId);
+            } else {
+                render();
+            }
         } catch (err) {
             Modal.showError(err.message);
         }
@@ -151,7 +180,7 @@ const Diagnoses = (() => {
         try { const r = await Api.patients.getAll(); return r.data; } catch { return []; }
     };
 
-    const formHTML = (d = {}, patients = []) => `
+    const formHTML = (d = {}, patients = [], lockedPatientName = null) => `
         <div class="form-row">
             <div class="form-group">
                 <label>ICD Code *</label>
@@ -172,10 +201,14 @@ const Diagnoses = (() => {
         <div class="form-row">
             <div class="form-group">
                 <label>Patient *</label>
-                <select id="f-patient">
-                    <option value="">— select patient —</option>
-                    ${patients.map((p) => `<option value="${p.id}" ${Number(d.patient_id) === p.id ? 'selected' : ''}>${escHtml(p.name)}</option>`).join('')}
-                </select>
+                ${lockedPatientName
+                    ? `<input type="text" value="${escHtml(lockedPatientName)}" disabled style="background:var(--color-bg-secondary);cursor:not-allowed" />
+                       <input type="hidden" id="f-patient" value="${d.patient_id}" />`
+                    : `<select id="f-patient">
+                        <option value="">— select patient —</option>
+                        ${patients.map((p) => `<option value="${p.id}" ${Number(d.patient_id) === p.id ? 'selected' : ''}>${escHtml(p.name)}</option>`).join('')}
+                       </select>`
+                }
             </div>
             <div class="form-group">
                 <label>Date Diagnosed *</label>

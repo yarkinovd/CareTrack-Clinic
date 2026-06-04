@@ -24,14 +24,18 @@ const Patients = (() => {
             const canEdit   = Auth.can('admin', 'clinician');
             const canDelete = Auth.can('admin');
 
+            const statusBadge = (count) => Number(count) > 0
+                ? `<span class="badge badge-diagnosed">Diagnosed</span>`
+                : `<span class="badge badge-pending">Pending</span>`;
+
             container.innerHTML = `
                 <table>
                     <thead>
                         <tr>
                             <th>#</th>
                             <th>Name</th>
-                            <th>Gender</th>
-                            <th class="hide-mobile">DOB</th>
+                            <th>Status</th>
+                            <th class="hide-mobile">Gender</th>
                             <th class="hide-mobile">Assigned Doctor</th>
                             <th>Actions</th>
                         </tr>
@@ -46,8 +50,8 @@ const Patients = (() => {
                                         ${escHtml(p.name)}
                                     </a>
                                 </td>
-                                <td>${p.gender}</td>
-                                <td class="hide-mobile text-sm">${formatDate(p.dob)}</td>
+                                <td>${statusBadge(p.diagnosis_count)}</td>
+                                <td class="hide-mobile">${p.gender}</td>
                                 <td class="hide-mobile">
                                     <span class="text-sm">${escHtml(p.doctor_name)}</span><br/>
                                     <span class="badge badge-specialty" style="font-size:.65rem">${p.doctor_specialty}</span>

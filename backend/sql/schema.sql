@@ -187,3 +187,28 @@ ALTER TABLE users ADD CONSTRAINT users_role_check
 -- Link patient users to their patient record
 ALTER TABLE users ADD COLUMN IF NOT EXISTS
     patient_id INTEGER REFERENCES patients(id) ON DELETE SET NULL;
+
+-- =============================================================================
+-- TABLE: appointments
+-- Tracks each patient visit booking. One patient can book with multiple doctors
+-- any number of times. Status: pending → completed (when diagnosis is added).
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS appointments (
+    id         SERIAL PRIMARY KEY,
+    patient_id INTEGER      NOT NULL REFERENCES patients(id)  ON DELETE CASCADE,
+    doctor_id  INTEGER      NOT NULL REFERENCES doctors(id)   ON DELETE RESTRICT,
+    status     VARCHAR(20)  NOT NULL DEFAULT 'pending'
+                   CHECK (status IN ('pending', 'completed')),
+    notes      TEXT,
+    booked_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_appointments_patient_id ON appointments(patient_id);
+CREATE INDEX IF NOT EXISTS idx_appointments_doctor_id  ON appointments(doctor_id);
+CREATE INDEX IF NOT EXISTS idx_appointments_status     ON appointments(status);
+
+CREATE OR REPLACE TRIGGER trg_appointments_updated_at
+    BEFORE UPDATE ON appointments
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();

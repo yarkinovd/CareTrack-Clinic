@@ -9,7 +9,8 @@
  *   DELETE                     → admin
  */
 
-const PatientModel = require('../models/Patient');
+const PatientModel      = require('../models/Patient');
+const AppointmentModel  = require('../models/Appointment');
 
 /** GET /api/patients  — list with optional ?search=, ?doctor_id=, ?gender= */
 const getAllPatients = async (req, res, next) => {
@@ -22,8 +23,16 @@ const getAllPatients = async (req, res, next) => {
         }
 
         const { search = '', doctor_id = '', gender = '' } = req.query;
-        const filterDoctorId = req.user.role === 'clinician' ? req.user.doctor_id : doctor_id;
-        const patients = await PatientModel.findAll({ search, doctor_id: filterDoctorId, gender });
+
+        // Clinician sees patients who have appointments with them (not just assigned patients)
+        if (req.user.role === 'clinician') {
+            const patients = await PatientModel.findAll({
+                search, gender, appointment_doctor_id: req.user.doctor_id,
+            });
+            return res.status(200).json({ success: true, count: patients.length, data: patients });
+        }
+
+        const patients = await PatientModel.findAll({ search, doctor_id, gender });
         res.status(200).json({ success: true, count: patients.length, data: patients });
     } catch (err) {
         next(err);
@@ -37,8 +46,11 @@ const getPatientById = async (req, res, next) => {
         if (!patient) {
             return res.status(404).json({ success: false, message: `Patient with id ${req.params.id} not found.` });
         }
-        if (req.user.role === 'clinician' && patient.doctor_id !== req.user.doctor_id) {
-            return res.status(403).json({ success: false, message: 'Access denied: not your patient.' });
+        if (req.user.role === 'clinician') {
+            const hasAppt = await AppointmentModel.hasAny(patient.id, req.user.doctor_id);
+            if (!hasAppt) {
+                return res.status(403).json({ success: false, message: 'Access denied: not your patient.' });
+            }
         }
         if (req.user.role === 'patient' && Number(req.params.id) !== req.user.patient_id) {
             return res.status(403).json({ success: false, message: 'Access denied.' });
@@ -111,7 +123,8 @@ const updatePatient = async (req, res, next) => {
             if (!existing) {
                 return res.status(404).json({ success: false, message: `Patient with id ${req.params.id} not found.` });
             }
-            if (existing.doctor_id !== req.user.doctor_id) {
+            const hasAppt = await AppointmentModel.hasAny(existing.id, req.user.doctor_id);
+            if (!hasAppt) {
                 return res.status(403).json({ success: false, message: 'Access denied: not your patient.' });
             }
         }

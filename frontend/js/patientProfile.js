@@ -20,9 +20,10 @@ const PatientProfile = (() => {
             const res     = await Api.patients.getProfile(patientId);
             const profile = res.data;
 
-            const { patient, doctor, diagnoses } = profile;
+            const { patient, doctor, diagnoses, appointments = [] } = profile;
             const canEditPatient  = Auth.can('admin', 'clinician');
             const canAddDiagnosis = Auth.can('admin', 'clinician');
+            const isPatient       = Auth.can('patient');
 
             container.innerHTML = `
                 <!-- ── Patient header ────────────────────────────── -->
@@ -37,6 +38,11 @@ const PatientProfile = (() => {
                         <p class="text-muted text-sm">Patient #${patient.id} · Registered ${formatDate(patient.registered_at)}</p>
                     </div>
                     <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                        ${isPatient ? `
+                            <button class="btn btn-primary" onclick="PatientProfile.openBookModal(${patient.id})">
+                                <i data-feather="calendar"></i> Book Appointment
+                            </button>
+                        ` : ''}
                         ${canEditPatient ? `
                             <button class="btn btn-secondary" onclick="Patients.openEditModal(${patient.id})">
                                 <i data-feather="edit-2"></i> Edit Patient
@@ -104,6 +110,34 @@ const PatientProfile = (() => {
                     </div>
                 </div>
 
+                <!-- ── Appointments ──────────────────────────────── -->
+                <div class="profile-diagnoses" style="margin-bottom:1.5rem">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                        <h4 style="margin:0">Appointments
+                            <span class="text-muted text-sm" style="font-weight:400;font-size:.8rem">
+                                (${appointments.length} record${appointments.length !== 1 ? 's' : ''})
+                            </span>
+                        </h4>
+                    </div>
+                    ${appointments.length === 0
+                        ? `<div class="empty-state"><p>No appointments booked yet.</p></div>`
+                        : appointments.map((a) => `
+                            <div class="diagnosis-card" style="align-items:center">
+                                <div>
+                                    <div class="desc">${escHtml(a.doctor_name)}
+                                        <span class="badge badge-specialty" style="margin-left:.4rem;font-size:.65rem">${escHtml(a.specialty)}</span>
+                                    </div>
+                                    <div class="date">Booked: ${formatDate(a.booked_at)}</div>
+                                    ${a.notes ? `<div class="notes">${escHtml(a.notes)}</div>` : ''}
+                                </div>
+                                <span class="badge ${a.status === 'pending' ? 'badge-pending' : 'badge-diagnosed'}">
+                                    ${a.status === 'pending' ? 'Pending' : 'Completed'}
+                                </span>
+                            </div>
+                        `).join('')
+                    }
+                </div>
+
                 <!-- ── Diagnosis History ───────────────────────────── -->
                 <div class="profile-diagnoses">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
@@ -152,7 +186,58 @@ const PatientProfile = (() => {
         }
     };
 
-    return { render };
+    const openBookModal = async (patientId) => {
+        Modal.open({
+            title:     'Book New Appointment',
+            body:      loadingHTML(),
+            onConfirm: () => handleBook(patientId),
+        });
+
+        try {
+            const res = await Api.doctors.getPublic();
+            const options = res.data.map((d) =>
+                `<option value="${d.id}">${escHtml(d.name)} (${d.specialty})</option>`
+            ).join('');
+            Modal.setBody(`
+                <div class="form-group">
+                    <label>Select Doctor *</label>
+                    <select id="f-book-doctor">
+                        <option value="">— select a doctor —</option>
+                        ${options}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notes (optional)</label>
+                    <textarea id="f-book-notes" placeholder="Describe your symptoms or reason for visit…"></textarea>
+                </div>
+                <div id="form-error" class="alert alert-error" hidden></div>
+            `);
+        } catch (err) {
+            Modal.setBody(`<p class="alert alert-error">${escHtml(err.message)}</p>`);
+        }
+    };
+
+    const handleBook = async (patientId) => {
+        const doctor_id = document.getElementById('f-book-doctor')?.value;
+        const notes     = document.getElementById('f-book-notes')?.value.trim();
+
+        if (!doctor_id) {
+            const err = document.getElementById('form-error');
+            if (err) { err.textContent = 'Please select a doctor.'; err.hidden = false; }
+            return;
+        }
+
+        try {
+            await Api.appointments.create({ doctor_id: Number(doctor_id), notes: notes || null });
+            Modal.close();
+            App.showAlert('Appointment booked successfully.', 'success');
+            render(patientId);
+        } catch (err) {
+            Modal.showError(err.message);
+        }
+    };
+
+    return { render, openBookModal };
 })();
 
 // ── Small utility: calculate age from DOB string ──────────────────────────

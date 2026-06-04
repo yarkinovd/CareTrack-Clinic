@@ -7,8 +7,12 @@
 const { query } = require('../config/db');
 
 const PatientModel = {
-    /** List patients with optional search by name and filter by doctor_id or gender. */
-    async findAll({ search = '', doctor_id = '', gender = '' } = {}) {
+    /**
+     * List patients with optional filtering.
+     * appointment_doctor_id — when set, filters patients who have at least one
+     * appointment with that doctor and adds has_pending_appointment flag.
+     */
+    async findAll({ search = '', doctor_id = '', appointment_doctor_id = '', gender = '' } = {}) {
         const conditions = [];
         const values     = [];
 
@@ -25,7 +29,21 @@ const PatientModel = {
             conditions.push(`p.gender = $${values.length}`);
         }
 
+        let aptParamIdx = null;
+        if (appointment_doctor_id) {
+            values.push(Number(appointment_doctor_id));
+            aptParamIdx = values.length;
+            conditions.push(`EXISTS (SELECT 1 FROM appointments _af WHERE _af.patient_id = p.id AND _af.doctor_id = $${aptParamIdx})`);
+        }
+
         const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+        const aptJoin = aptParamIdx
+            ? `LEFT JOIN appointments _appt ON _appt.patient_id = p.id AND _appt.doctor_id = $${aptParamIdx}`
+            : '';
+        const aptSelect = aptParamIdx
+            ? `BOOL_OR(_appt.status = 'pending') AS has_pending_appointment`
+            : `false AS has_pending_appointment`;
 
         const sql = `
             SELECT
@@ -39,10 +57,12 @@ const PatientModel = {
                 d.specialty  AS doctor_specialty,
                 p.created_at,
                 p.updated_at,
-                COUNT(dx.id) AS diagnosis_count
+                COUNT(DISTINCT dx.id) AS diagnosis_count,
+                ${aptSelect}
             FROM   patients p
             JOIN   doctors  d ON d.id = p.doctor_id
             LEFT JOIN diagnoses dx ON dx.patient_id = p.id
+            ${aptJoin}
             ${where}
             GROUP BY p.id, p.name, p.dob, p.phone, p.gender, p.doctor_id,
                      d.name, d.specialty, p.created_at, p.updated_at
@@ -104,21 +124,24 @@ const PatientModel = {
 
         // --- Full diagnosis history ---
         const diagnosisSql = `
-            SELECT
-                id,
-                icd_code,
-                description,
-                severity_level,
-                diagnosed_at,
-                notes,
-                created_at
+            SELECT id, icd_code, description, severity_level, diagnosed_at, notes, created_at
             FROM   diagnoses
             WHERE  patient_id = $1
             ORDER  BY diagnosed_at DESC, created_at DESC
         `;
         const diagnosisResult = await query(diagnosisSql, [id]);
 
-        // Merge into a single enriched profile object
+        // --- Appointment history ---
+        const appointmentSql = `
+            SELECT a.id, a.status, a.notes, a.booked_at, a.created_at,
+                   d.id AS doctor_id, d.name AS doctor_name, d.specialty
+            FROM   appointments a
+            JOIN   doctors d ON d.id = a.doctor_id
+            WHERE  a.patient_id = $1
+            ORDER  BY a.booked_at DESC
+        `;
+        const appointmentResult = await query(appointmentSql, [id]);
+
         const row = patientResult.rows[0];
         return {
             patient: {
@@ -137,7 +160,8 @@ const PatientModel = {
                 department: row.doctor_department,
                 contact:    row.doctor_contact,
             },
-            diagnoses: diagnosisResult.rows,
+            diagnoses:    diagnosisResult.rows,
+            appointments: appointmentResult.rows,
         };
     },
 

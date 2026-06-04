@@ -24,7 +24,8 @@ const errorHandler   = require('./middleware/errorHandler');
 const authRoutes     = require('./routes/authRoutes');
 const doctorRoutes   = require('./routes/doctorRoutes');
 const patientRoutes  = require('./routes/patientRoutes');
-const diagnosisRoutes = require('./routes/diagnosisRoutes');
+const diagnosisRoutes    = require('./routes/diagnosisRoutes');
+const appointmentRoutes  = require('./routes/appointmentRoutes');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -87,7 +88,8 @@ app.use(express.static(path.join(__dirname, '..', 'frontend')));
 app.use('/api/auth',      authRoutes);
 app.use('/api/doctors',   doctorRoutes);
 app.use('/api/patients',  patientRoutes);
-app.use('/api/diagnoses', diagnosisRoutes);
+app.use('/api/diagnoses',    diagnosisRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 

@@ -96,6 +96,17 @@ const Api = {
         delete:     (id)   => request(`/patients/${id}`, { method: 'DELETE' }),
     },
 
+    // ── Appointments ──────────────────────────────────────────────────────
+    appointments: {
+        getAll:  (params = {}) => {
+            const qs = new URLSearchParams(
+                Object.fromEntries(Object.entries(params).filter(([, v]) => v))
+            ).toString();
+            return request(`/appointments${qs ? `?${qs}` : ''}`);
+        },
+        create: (body) => request('/appointments', { method: 'POST', body }),
+    },
+
     // ── Diagnoses ─────────────────────────────────────────────────────────
     diagnoses: {
         getAll:  (params = {}) => {

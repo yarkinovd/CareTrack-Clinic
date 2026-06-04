@@ -191,6 +191,12 @@ const registerPatient = async (req, res, next) => {
             );
             const patientId = patRes.rows[0].id;
 
+            // Create the initial appointment with the chosen doctor
+            await client.query(
+                `INSERT INTO appointments (patient_id, doctor_id) VALUES ($1, $2)`,
+                [patientId, Number(doctor_id)]
+            );
+
             const passwordHash = await bcrypt.hash(password, 10);
             const userRes = await client.query(
                 `INSERT INTO users (username, password_hash, role, patient_id)

@@ -11,8 +11,9 @@
  * Receptionists have no access to diagnosis endpoints (enforced in routes).
  */
 
-const DiagnosisModel = require('../models/Diagnosis');
-const PatientModel   = require('../models/Patient');
+const DiagnosisModel    = require('../models/Diagnosis');
+const PatientModel      = require('../models/Patient');
+const AppointmentModel  = require('../models/Appointment');
 
 /**
  * GET /api/diagnoses
@@ -52,8 +53,8 @@ const getDiagnosisById = async (req, res, next) => {
             return res.status(404).json({ success: false, message: `Diagnosis with id ${req.params.id} not found.` });
         }
         if (req.user.role === 'clinician') {
-            const patient = await PatientModel.findById(diagnosis.patient_id);
-            if (!patient || patient.doctor_id !== req.user.doctor_id) {
+            const hasAppt = await AppointmentModel.hasAny(diagnosis.patient_id, req.user.doctor_id);
+            if (!hasAppt) {
                 return res.status(403).json({ success: false, message: 'Access denied.' });
             }
         }
@@ -86,11 +87,11 @@ const createDiagnosis = async (req, res, next) => {
             });
         }
 
-        // Clinician can only create diagnoses for their own patients
+        // Clinician can only create diagnoses for patients who have an appointment with them
         if (req.user.role === 'clinician') {
-            const patient = await PatientModel.findById(patient_id);
-            if (!patient || patient.doctor_id !== req.user.doctor_id) {
-                return res.status(403).json({ success: false, message: 'Access denied: not your patient.' });
+            const hasAppt = await AppointmentModel.hasAny(patient_id, req.user.doctor_id);
+            if (!hasAppt) {
+                return res.status(403).json({ success: false, message: 'Access denied: no appointment with this patient.' });
             }
         }
 
@@ -102,6 +103,11 @@ const createDiagnosis = async (req, res, next) => {
             diagnosed_at,
             notes,
         });
+
+        // Auto-complete the most recent pending appointment for this clinician+patient
+        if (req.user.role === 'clinician') {
+            await AppointmentModel.completeLatest(Number(patient_id), req.user.doctor_id);
+        }
 
         res.status(201).json({ success: true, message: 'Diagnosis created successfully.', data: diagnosis });
     } catch (err) {
@@ -118,8 +124,8 @@ const updateDiagnosis = async (req, res, next) => {
             if (!existing) {
                 return res.status(404).json({ success: false, message: `Diagnosis with id ${req.params.id} not found.` });
             }
-            const patient = await PatientModel.findById(existing.patient_id);
-            if (!patient || patient.doctor_id !== req.user.doctor_id) {
+            const hasAppt = await AppointmentModel.hasAny(existing.patient_id, req.user.doctor_id);
+            if (!hasAppt) {
                 return res.status(403).json({ success: false, message: 'Access denied.' });
             }
         }

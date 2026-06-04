@@ -32,7 +32,7 @@ const DiagnosisModel = {
         }
         if (doctor_id) {
             values.push(Number(doctor_id));
-            conditions.push(`p.doctor_id = $${values.length}`);
+            conditions.push(`EXISTS (SELECT 1 FROM appointments _a WHERE _a.patient_id = d.patient_id AND _a.doctor_id = $${values.length})`);
         }
 
         const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';

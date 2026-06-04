@@ -24,9 +24,17 @@ const Patients = (() => {
             const canEdit   = Auth.can('admin', 'clinician');
             const canDelete = Auth.can('admin');
 
-            const statusBadge = (count) => Number(count) > 0
-                ? `<span class="badge badge-diagnosed">Diagnosed</span>`
-                : `<span class="badge badge-pending">Pending</span>`;
+            const isClinician = Auth.getUser()?.role === 'clinician';
+            const statusBadge = (p) => {
+                if (isClinician) {
+                    return p.has_pending_appointment
+                        ? `<span class="badge badge-pending">Pending</span>`
+                        : `<span class="badge badge-diagnosed">Diagnosed</span>`;
+                }
+                return Number(p.diagnosis_count) > 0
+                    ? `<span class="badge badge-diagnosed">Diagnosed</span>`
+                    : `<span class="badge badge-pending">Pending</span>`;
+            };
 
             container.innerHTML = `
                 <table>
@@ -50,7 +58,7 @@ const Patients = (() => {
                                         ${escHtml(p.name)}
                                     </a>
                                 </td>
-                                <td>${statusBadge(p.diagnosis_count)}</td>
+                                <td>${statusBadge(p)}</td>
                                 <td class="hide-mobile">${p.gender}</td>
                                 <td class="hide-mobile">
                                     <span class="text-sm">${escHtml(p.doctor_name)}</span><br/>

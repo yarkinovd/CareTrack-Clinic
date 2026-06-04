@@ -144,8 +144,8 @@ const App = (() => {
     // ── Bootstrap ─────────────────────────────────────────────────────────
 
     const init = () => {
-        // Bind all event listeners FIRST — independent of auth state
         bindLoginForm();
+        bindRegisterForm();
         bindNavigation();
         bindSidebar();
         bindToolbars();
@@ -158,7 +158,7 @@ const App = (() => {
         }
     };
 
-    // ── Login ──────────────────────────────────────────────────────────────
+    // ── Login / Register toggle ────────────────────────────────────────────
 
     const bindLoginForm = () => {
         $('login-form').addEventListener('submit', async (e) => {
@@ -188,6 +188,72 @@ const App = (() => {
         });
     };
 
+    // ── Register Form ──────────────────────────────────────────────────────
+
+    const bindRegisterForm = () => {
+        // Toggle between login and register panels
+        $('goto-register').addEventListener('click', async (e) => {
+            e.preventDefault();
+            $('login-card').hidden    = true;
+            $('register-card').hidden = false;
+
+            // Load doctors list into dropdown
+            const select = $('reg-doctor');
+            try {
+                const res = await Api.doctors.getPublic();
+                select.innerHTML = '<option value="">— select a doctor —</option>' +
+                    res.data.map((d) => `<option value="${d.id}">${escHtml(d.name)} (${d.specialty})</option>`).join('');
+            } catch {
+                select.innerHTML = '<option value="">Failed to load doctors</option>';
+            }
+        });
+
+        $('goto-login').addEventListener('click', (e) => {
+            e.preventDefault();
+            $('register-card').hidden = true;
+            $('login-card').hidden    = false;
+        });
+
+        $('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name      = $('reg-name').value.trim();
+            const dob       = $('reg-dob').value;
+            const gender    = $('reg-gender').value;
+            const phone     = $('reg-phone').value.trim();
+            const doctor_id = $('reg-doctor').value;
+            const username  = $('reg-username').value.trim();
+            const password  = $('reg-password').value;
+
+            const errorEl = $('register-error');
+            errorEl.hidden = true;
+
+            if (!name || !dob || !gender || !doctor_id || !username || !password) {
+                errorEl.textContent = 'All required fields must be filled in.';
+                errorEl.hidden = false;
+                return;
+            }
+
+            const spinner = $('register-spinner');
+            const btnText = $('register-btn-text');
+            spinner.hidden = false;
+            btnText.textContent = 'Creating account…';
+
+            try {
+                const res = await Api.auth.registerPatient({ name, dob, gender, phone, doctor_id, username, password });
+                Auth.saveSession(res.token, res.user);
+                $('register-card').hidden = true;
+                showApp();
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.hidden = false;
+            } finally {
+                spinner.hidden = true;
+                btnText.textContent = 'Create Account';
+            }
+        });
+    };
+
     // ── Show App Shell ────────────────────────────────────────────────────
 
     const showApp = () => {
@@ -197,11 +263,12 @@ const App = (() => {
         Auth.renderUserUI();
         Auth.applyRoleVisibility();
 
-        // Receptionists have no access to diagnoses view — hide the nav link
-        if (!Auth.can('admin', 'clinician')) {
-            document.querySelectorAll('.nav-item[data-view="diagnoses"]').forEach((el) => {
-                el.style.display = 'none';
-            });
+        // Patient portal: go directly to their own profile, skip the full app shell
+        if (Auth.can('patient')) {
+            const user = Auth.getUser();
+            navigate('my-profile', user.patient_id);
+            renderIcons();
+            return;
         }
 
         navigate('dashboard');
@@ -248,6 +315,7 @@ const App = (() => {
             'patients':        'view-patients',
             'diagnoses':       'view-diagnoses',
             'patient-profile': 'view-patient-profile',
+            'my-profile':      'view-patient-profile',
         };
 
         const viewEl = $(viewMap[viewName]);
@@ -264,6 +332,7 @@ const App = (() => {
             'patients':        'Patients',
             'diagnoses':       'Diagnoses',
             'patient-profile': 'Patient Profile',
+            'my-profile':      'My Profile',
         };
         $('page-title').textContent = titles[viewName] || viewName;
 
@@ -281,6 +350,14 @@ const App = (() => {
             case 'diagnoses':
                 Diagnoses.render();
                 break;
+            case 'my-profile': {
+                const user = Auth.getUser();
+                if (user?.patient_id) {
+                    profilePatientId = user.patient_id;
+                    PatientProfile.render(user.patient_id);
+                }
+                break;
+            }
             case 'patient-profile':
                 if (id) {
                     profilePatientId = id;

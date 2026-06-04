@@ -22,7 +22,7 @@ const PatientProfile = (() => {
 
             const { patient, doctor, diagnoses } = profile;
             const canEditPatient  = Auth.can('admin', 'clinician');
-            const canAddDiagnosis = Auth.can('admin');
+            const canAddDiagnosis = Auth.can('admin', 'clinician');
 
             container.innerHTML = `
                 <!-- ── Patient header ────────────────────────────── -->

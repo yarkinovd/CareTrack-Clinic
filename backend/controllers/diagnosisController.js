@@ -25,9 +25,19 @@ const PatientModel   = require('../models/Patient');
 const getAllDiagnoses = async (req, res, next) => {
     try {
         const { patient_id = '', severity = '', icd_code = '', search = '' } = req.query;
-        // Clinician sees only diagnoses for their own patients
-        const filterDoctorId = req.user.role === 'clinician' ? req.user.doctor_id : '';
-        const diagnoses = await DiagnosisModel.findAll({ patient_id, severity, icd_code, search, doctor_id: filterDoctorId });
+
+        let filterDoctorId  = '';
+        let filterPatientId = patient_id;
+
+        if (req.user.role === 'clinician') {
+            filterDoctorId = req.user.doctor_id;
+        } else if (req.user.role === 'patient') {
+            filterPatientId = req.user.patient_id; // patient sees only their own
+        }
+
+        const diagnoses = await DiagnosisModel.findAll({
+            patient_id: filterPatientId, severity, icd_code, search, doctor_id: filterDoctorId,
+        });
         res.status(200).json({ success: true, count: diagnoses.length, data: diagnoses });
     } catch (err) {
         next(err);
@@ -46,6 +56,9 @@ const getDiagnosisById = async (req, res, next) => {
             if (!patient || patient.doctor_id !== req.user.doctor_id) {
                 return res.status(403).json({ success: false, message: 'Access denied.' });
             }
+        }
+        if (req.user.role === 'patient' && diagnosis.patient_id !== req.user.patient_id) {
+            return res.status(403).json({ success: false, message: 'Access denied.' });
         }
         res.status(200).json({ success: true, data: diagnosis });
     } catch (err) {
@@ -71,6 +84,14 @@ const createDiagnosis = async (req, res, next) => {
                 success: false,
                 message: `severity_level must be one of: ${validSeverities.join(', ')}.`,
             });
+        }
+
+        // Clinician can only create diagnoses for their own patients
+        if (req.user.role === 'clinician') {
+            const patient = await PatientModel.findById(patient_id);
+            if (!patient || patient.doctor_id !== req.user.doctor_id) {
+                return res.status(403).json({ success: false, message: 'Access denied: not your patient.' });
+            }
         }
 
         const diagnosis = await DiagnosisModel.create({

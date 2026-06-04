@@ -60,9 +60,10 @@ async function request(endpoint, options = {}) {
 const Api = {
     // ── Authentication ────────────────────────────────────────────────────
     auth: {
-        login:    (body) => request('/auth/login', { method: 'POST', body }),
-        register: (body) => request('/auth/register', { method: 'POST', body }),
-        me:       ()     => request('/auth/me'),
+        login:            (body) => request('/auth/login', { method: 'POST', body }),
+        register:         (body) => request('/auth/register', { method: 'POST', body }),
+        registerPatient:  (body) => request('/auth/register/patient', { method: 'POST', body }),
+        me:               ()     => request('/auth/me'),
     },
 
     // ── Doctors ───────────────────────────────────────────────────────────
@@ -73,6 +74,7 @@ const Api = {
             ).toString();
             return request(`/doctors${qs ? `?${qs}` : ''}`);
         },
+        getPublic: () => request('/doctors/public'),
         getOne:   (id)   => request(`/doctors/${id}`),
         create:   (body) => request('/doctors', { method: 'POST', body }),
         update:   (id, body) => request(`/doctors/${id}`, { method: 'PUT', body }),

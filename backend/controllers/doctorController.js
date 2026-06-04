@@ -8,6 +8,19 @@ const bcrypt      = require('bcryptjs');
 const DoctorModel = require('../models/Doctor');
 const { getClient } = require('../config/db');
 
+/** GET /api/doctors/public — public list for patient registration dropdown (no auth) */
+const getPublicDoctors = async (req, res, next) => {
+    try {
+        const doctors = await DoctorModel.findAll({});
+        res.status(200).json({
+            success: true,
+            data: doctors.map((d) => ({ id: d.id, name: d.name, specialty: d.specialty })),
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
 /** GET /api/doctors  — list with optional ?search= and ?specialty= */
 const getAllDoctors = async (req, res, next) => {
     try {
@@ -130,4 +143,4 @@ const deleteDoctor = async (req, res, next) => {
     }
 };
 
-module.exports = { getAllDoctors, getDoctorById, createDoctor, updateDoctor, deleteDoctor };
+module.exports = { getPublicDoctors, getAllDoctors, getDoctorById, createDoctor, updateDoctor, deleteDoctor };

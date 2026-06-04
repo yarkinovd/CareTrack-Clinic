@@ -171,3 +171,19 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_doctors_name ON doctors(name);
 -- =============================================================================
 ALTER TABLE users ADD COLUMN IF NOT EXISTS
     doctor_id INTEGER REFERENCES doctors(id) ON DELETE SET NULL;
+
+-- =============================================================================
+-- MIGRATION: add patient self-registration support
+-- =============================================================================
+
+-- Make email nullable so patient accounts don't require one
+ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
+
+-- Extend the role check constraint to include 'patient'
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check
+    CHECK (role IN ('admin', 'clinician', 'receptionist', 'patient'));
+
+-- Link patient users to their patient record
+ALTER TABLE users ADD COLUMN IF NOT EXISTS
+    patient_id INTEGER REFERENCES patients(id) ON DELETE SET NULL;

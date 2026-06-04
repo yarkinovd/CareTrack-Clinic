@@ -10,6 +10,7 @@
 const express  = require('express');
 const { protect, authorize } = require('../middleware/auth');
 const {
+    getPublicDoctors,
     getAllDoctors,
     getDoctorById,
     createDoctor,
@@ -19,7 +20,10 @@ const {
 
 const router = express.Router();
 
-// All doctor routes require at minimum a valid token
+// Public route — no auth required (used by patient registration form)
+router.get('/public', getPublicDoctors);
+
+// All other doctor routes require at minimum a valid token
 router.use(protect);
 
 router.get('/',    authorize('admin', 'receptionist'), getAllDoctors);

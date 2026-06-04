@@ -25,10 +25,9 @@ const router = express.Router();
 router.use(protect);
 
 // --- Read ---
-router.get('/',            authorize('admin', 'clinician', 'receptionist'), getAllPatients);
-router.get('/:id',         authorize('admin', 'clinician', 'receptionist'), getPatientById);
-// Comprehensive profile endpoint — includes doctor details + full diagnosis history
-router.get('/:id/profile', authorize('admin', 'clinician', 'receptionist'), getPatientProfile);
+router.get('/',            authorize('admin', 'clinician', 'receptionist', 'patient'), getAllPatients);
+router.get('/:id',         authorize('admin', 'clinician', 'receptionist', 'patient'), getPatientById);
+router.get('/:id/profile', authorize('admin', 'clinician', 'receptionist', 'patient'), getPatientProfile);
 
 // --- Write ---
 router.post('/',     authorize('admin', 'receptionist'), createPatient);

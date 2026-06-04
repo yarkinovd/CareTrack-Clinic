@@ -23,10 +23,10 @@ const router = express.Router();
 
 router.use(protect);
 
-router.get('/',    authorize('admin', 'clinician'), getAllDiagnoses);
-router.get('/:id', authorize('admin', 'clinician'), getDiagnosisById);
+router.get('/',    authorize('admin', 'clinician', 'patient'), getAllDiagnoses);
+router.get('/:id', authorize('admin', 'clinician', 'patient'), getDiagnosisById);
 
-router.post('/',    authorize('admin'),              createDiagnosis);
+router.post('/',    authorize('admin', 'clinician'), createDiagnosis);
 router.put('/:id',  authorize('admin', 'clinician'), updateDiagnosis);
 router.delete('/:id', authorize('admin'),            deleteDiagnosis);
 

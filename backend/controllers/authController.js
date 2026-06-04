@@ -6,7 +6,7 @@
 
 const bcrypt  = require('bcryptjs');
 const jwt     = require('jsonwebtoken');
-const { query } = require('../config/db');
+const { query, getClient } = require('../config/db');
 
 /**
  * POST /api/auth/login
@@ -24,9 +24,8 @@ const login = async (req, res, next) => {
             });
         }
 
-        // Fetch user by username (include doctor_id for clinician filtering)
         const result = await query(
-            'SELECT id, username, email, password_hash, role, is_active, doctor_id FROM users WHERE username = $1',
+            'SELECT id, username, email, password_hash, role, is_active, doctor_id, patient_id FROM users WHERE username = $1',
             [username]
         );
 
@@ -57,7 +56,13 @@ const login = async (req, res, next) => {
         }
 
         const token = jwt.sign(
-            { id: user.id, username: user.username, role: user.role, doctor_id: user.doctor_id || null },
+            {
+                id:         user.id,
+                username:   user.username,
+                role:       user.role,
+                doctor_id:  user.doctor_id  || null,
+                patient_id: user.patient_id || null,
+            },
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
         );
@@ -67,11 +72,12 @@ const login = async (req, res, next) => {
             message: 'Login successful.',
             token,
             user: {
-                id:        user.id,
-                username:  user.username,
-                email:     user.email,
-                role:      user.role,
-                doctor_id: user.doctor_id || null,
+                id:         user.id,
+                username:   user.username,
+                email:      user.email,
+                role:       user.role,
+                doctor_id:  user.doctor_id  || null,
+                patient_id: user.patient_id || null,
             },
         });
     } catch (err) {
@@ -147,4 +153,83 @@ const getMe = async (req, res, next) => {
     }
 };
 
-module.exports = { login, register, getMe };
+/**
+ * POST /api/auth/register/patient
+ * Public endpoint — patients self-register and are auto-logged in.
+ * Creates both a patients row and a linked users row in a transaction.
+ */
+const registerPatient = async (req, res, next) => {
+    try {
+        const { username, password, name, dob, gender, phone, doctor_id } = req.body;
+
+        if (!username || !password || !name || !dob || !gender || !doctor_id) {
+            return res.status(400).json({
+                success: false,
+                message: 'username, password, name, dob, gender, and doctor_id are all required.',
+            });
+        }
+
+        const validGenders = ['Male', 'Female', 'Other'];
+        if (!validGenders.includes(gender)) {
+            return res.status(400).json({ success: false, message: `gender must be one of: ${validGenders.join(', ')}.` });
+        }
+        if (isNaN(Date.parse(dob))) {
+            return res.status(400).json({ success: false, message: 'dob must be a valid date (YYYY-MM-DD).' });
+        }
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters.' });
+        }
+
+        const client = await getClient();
+        try {
+            await client.query('BEGIN');
+
+            const patRes = await client.query(
+                `INSERT INTO patients (name, dob, phone, gender, doctor_id)
+                 VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+                [name, dob, phone || null, gender, Number(doctor_id)]
+            );
+            const patientId = patRes.rows[0].id;
+
+            const passwordHash = await bcrypt.hash(password, 10);
+            const userRes = await client.query(
+                `INSERT INTO users (username, password_hash, role, patient_id)
+                 VALUES ($1, $2, 'patient', $3)
+                 RETURNING id, username, role, patient_id`,
+                [username, passwordHash, patientId]
+            );
+            const newUser = userRes.rows[0];
+
+            await client.query('COMMIT');
+
+            const token = jwt.sign(
+                { id: newUser.id, username: newUser.username, role: 'patient',
+                  doctor_id: null, patient_id: newUser.patient_id },
+                process.env.JWT_SECRET,
+                { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
+            );
+
+            res.status(201).json({
+                success: true,
+                message: 'Registration successful.',
+                token,
+                user: {
+                    id: newUser.id, username: newUser.username, email: null,
+                    role: 'patient', doctor_id: null, patient_id: newUser.patient_id,
+                },
+            });
+        } catch (txErr) {
+            await client.query('ROLLBACK');
+            if (txErr.code === '23505') {
+                return res.status(409).json({ success: false, message: `Username "${username}" is already taken.` });
+            }
+            throw txErr;
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        next(err);
+    }
+};
+
+module.exports = { login, register, registerPatient, getMe };

@@ -15,7 +15,9 @@
 
 <!-- ═══════════════════════ LOGIN SCREEN ════════════════════════════════════ -->
 <div id="login-screen" class="login-screen">
-    <div class="login-card">
+
+    <!-- Sign In card -->
+    <div id="login-card" class="login-card">
         <div class="login-logo">
             <span class="logo-icon">⚕</span>
             <h1>CareTrack <span>Clinic</span></h1>
@@ -43,7 +45,76 @@
             Clinician: <code>dr_wilson / Admin@1234</code><br/>
             Receptionist: <code>receptionist / Admin@1234</code>
         </p>
+        <p style="text-align:center;margin-top:1rem;font-size:.875rem">
+            New patient?
+            <a href="#" id="goto-register" style="color:var(--color-primary);font-weight:600">Register here →</a>
+        </p>
     </div>
+
+    <!-- Patient Registration card -->
+    <div id="register-card" class="login-card" hidden>
+        <div class="login-logo">
+            <span class="logo-icon">⚕</span>
+            <h1>CareTrack <span>Clinic</span></h1>
+            <p>Patient Registration</p>
+        </div>
+
+        <form id="register-form" novalidate>
+            <div class="form-group">
+                <label for="reg-name">Full Name *</label>
+                <input type="text" id="reg-name" placeholder="Your full name" required />
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="reg-dob">Date of Birth *</label>
+                    <input type="date" id="reg-dob" required />
+                </div>
+                <div class="form-group">
+                    <label for="reg-gender">Gender *</label>
+                    <select id="reg-gender">
+                        <option value="">— select —</option>
+                        <option>Male</option>
+                        <option>Female</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="reg-phone">Phone</label>
+                    <input type="text" id="reg-phone" placeholder="+1-555-0100" />
+                </div>
+                <div class="form-group">
+                    <label for="reg-doctor">Select Doctor *</label>
+                    <select id="reg-doctor">
+                        <option value="">Loading…</option>
+                    </select>
+                </div>
+            </div>
+            <hr style="margin:.75rem 0;border:none;border-top:1px solid var(--color-border)" />
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="reg-username">Username *</label>
+                    <input type="text" id="reg-username" placeholder="Choose a username" autocomplete="username" required />
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Password *</label>
+                    <input type="password" id="reg-password" placeholder="Min 8 characters" autocomplete="new-password" required />
+                </div>
+            </div>
+            <div id="register-error" class="alert alert-error" hidden></div>
+            <button type="submit" id="register-btn" class="btn btn-primary btn-full">
+                <span id="register-btn-text">Create Account</span>
+                <span id="register-spinner" class="spinner" hidden></span>
+            </button>
+        </form>
+
+        <p style="text-align:center;margin-top:1rem;font-size:.875rem">
+            Already have an account?
+            <a href="#" id="goto-login" style="color:var(--color-primary);font-weight:600">← Sign In</a>
+        </p>
+    </div>
+
 </div>
 
 <!-- ═══════════════════════ MAIN APP ════════════════════════════════════════ -->
@@ -60,20 +131,21 @@
         </div>
 
         <nav class="sidebar-nav">
-            <a href="#" class="nav-item active" data-view="dashboard">
+            <a href="#" class="nav-item active" data-view="dashboard" data-roles="admin,clinician,receptionist">
                 <i data-feather="grid"></i> <span>Dashboard</span>
             </a>
-            <!-- Admin + Clinician + Receptionist -->
-            <a href="#" class="nav-item" data-view="patients">
+            <a href="#" class="nav-item" data-view="patients" data-roles="admin,clinician,receptionist">
                 <i data-feather="users"></i> <span>Patients</span>
             </a>
-            <!-- Admin + Receptionist only (clinicians don't need the doctors list) -->
             <a href="#" class="nav-item" data-view="doctors" data-roles="admin,receptionist">
                 <i data-feather="user-check"></i> <span>Doctors</span>
             </a>
-            <!-- Admin + Clinician only -->
             <a href="#" class="nav-item" data-view="diagnoses" data-roles="admin,clinician">
                 <i data-feather="activity"></i> <span>Diagnoses</span>
+            </a>
+            <!-- Patient portal nav -->
+            <a href="#" class="nav-item" data-view="my-profile" data-roles="patient">
+                <i data-feather="user"></i> <span>My Profile</span>
             </a>
         </nav>
 
@@ -192,7 +264,7 @@
                     <option>Medium</option>
                     <option>High</option>
                 </select>
-                <button class="btn btn-primary" id="add-diagnosis-btn" data-roles="admin">
+                <button class="btn btn-primary" id="add-diagnosis-btn" data-roles="admin,clinician">
                     <i data-feather="plus"></i> Add Diagnosis
                 </button>
             </div>
@@ -201,7 +273,7 @@
 
         <!-- Patient Profile (nested view — rendered on-demand) -->
         <section id="view-patient-profile" class="view" hidden>
-            <button class="btn btn-ghost btn-sm back-btn" id="back-from-profile">
+            <button class="btn btn-ghost btn-sm back-btn" id="back-from-profile" data-roles="admin,clinician,receptionist">
                 <i data-feather="arrow-left"></i> Back to Patients
             </button>
             <div id="patient-profile-content"></div>

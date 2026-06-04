@@ -5,12 +5,15 @@
 
 const express    = require('express');
 const { protect, authorize } = require('../middleware/auth');
-const { login, register, getMe } = require('../controllers/authController');
+const { login, register, registerPatient, getMe } = require('../controllers/authController');
 
 const router = express.Router();
 
 // POST /api/auth/login  — public
 router.post('/login', login);
+
+// POST /api/auth/register/patient — public (patient self-registration)
+router.post('/register/patient', registerPatient);
 
 // POST /api/auth/register — admin only (protect + authorize)
 router.post('/register', protect, authorize('admin'), register);

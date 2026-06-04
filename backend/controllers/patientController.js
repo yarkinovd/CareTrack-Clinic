@@ -14,8 +14,14 @@ const PatientModel = require('../models/Patient');
 /** GET /api/patients  — list with optional ?search=, ?doctor_id=, ?gender= */
 const getAllPatients = async (req, res, next) => {
     try {
+        // Patient sees only their own record
+        if (req.user.role === 'patient') {
+            const patient = await PatientModel.findById(req.user.patient_id);
+            if (!patient) return res.status(404).json({ success: false, message: 'Patient record not found.' });
+            return res.status(200).json({ success: true, count: 1, data: [patient] });
+        }
+
         const { search = '', doctor_id = '', gender = '' } = req.query;
-        // Clinician can only see patients assigned to them
         const filterDoctorId = req.user.role === 'clinician' ? req.user.doctor_id : doctor_id;
         const patients = await PatientModel.findAll({ search, doctor_id: filterDoctorId, gender });
         res.status(200).json({ success: true, count: patients.length, data: patients });
@@ -34,6 +40,9 @@ const getPatientById = async (req, res, next) => {
         if (req.user.role === 'clinician' && patient.doctor_id !== req.user.doctor_id) {
             return res.status(403).json({ success: false, message: 'Access denied: not your patient.' });
         }
+        if (req.user.role === 'patient' && Number(req.params.id) !== req.user.patient_id) {
+            return res.status(403).json({ success: false, message: 'Access denied.' });
+        }
         res.status(200).json({ success: true, data: patient });
     } catch (err) {
         next(err);
@@ -48,6 +57,9 @@ const getPatientById = async (req, res, next) => {
  */
 const getPatientProfile = async (req, res, next) => {
     try {
+        if (req.user.role === 'patient' && Number(req.params.id) !== req.user.patient_id) {
+            return res.status(403).json({ success: false, message: 'Access denied.' });
+        }
         const profile = await PatientModel.getProfile(req.params.id);
         if (!profile) {
             return res.status(404).json({ success: false, message: `Patient with id ${req.params.id} not found.` });

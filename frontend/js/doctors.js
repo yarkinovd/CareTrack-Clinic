@@ -66,7 +66,8 @@ const Doctors = (() => {
             `;
             renderIcons();
         } catch (err) {
-            container.innerHTML = errorHTML(err.message);
+            console.error('[Doctors.render]', err);
+            container.innerHTML = errorHTML(err.message || 'Failed to load doctors.');
         }
     };
 

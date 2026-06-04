@@ -79,7 +79,8 @@ const Patients = (() => {
             `;
             renderIcons();
         } catch (err) {
-            container.innerHTML = errorHTML(err.message);
+            console.error('[Patients.render]', err);
+            container.innerHTML = errorHTML(err.message || 'Failed to load patients.');
         }
     };
 

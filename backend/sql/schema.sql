@@ -135,3 +135,33 @@ CREATE OR REPLACE TRIGGER trg_patients_updated_at
 CREATE OR REPLACE TRIGGER trg_diagnoses_updated_at
     BEFORE UPDATE ON diagnoses
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- =============================================================================
+-- MIGRATION: Deduplicate doctors seeded multiple times, then lock with UNIQUE
+-- Keeps the lowest id for each name; reassigns any patients that referenced a
+-- duplicate id so foreign-key integrity is preserved.
+-- Safe to re-run: the DO block exits early when no duplicates exist.
+-- =============================================================================
+DO $$
+DECLARE
+    dup RECORD;
+BEGIN
+    FOR dup IN
+        SELECT name, MIN(id) AS keep_id
+        FROM   doctors
+        GROUP  BY name
+        HAVING COUNT(*) > 1
+    LOOP
+        -- Point patients away from the soon-to-be-deleted duplicate rows
+        UPDATE patients
+        SET    doctor_id = dup.keep_id
+        WHERE  doctor_id IN (
+            SELECT id FROM doctors WHERE name = dup.name AND id <> dup.keep_id
+        );
+        -- Now it is safe to delete the duplicates
+        DELETE FROM doctors WHERE name = dup.name AND id <> dup.keep_id;
+    END LOOP;
+END $$;
+
+-- Prevent future duplicate doctors (idempotent)
+CREATE UNIQUE INDEX IF NOT EXISTS uq_doctors_name ON doctors(name);

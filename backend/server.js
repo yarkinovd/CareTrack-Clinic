@@ -19,6 +19,7 @@ const morgan      = require('morgan');
 const rateLimit   = require('express-rate-limit');
 const path        = require('path');
 
+const { runMigrations } = require('./config/db');
 const errorHandler   = require('./middleware/errorHandler');
 const authRoutes     = require('./routes/authRoutes');
 const doctorRoutes   = require('./routes/doctorRoutes');
@@ -107,9 +108,15 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
+// Run DB migrations first, then open the HTTP port.
 
-app.listen(PORT, () => {
-    console.log(`[SERVER] CareTrack Clinic API running on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
-});
+const start = async () => {
+    await runMigrations();
+    app.listen(PORT, () => {
+        console.log(`[SERVER] CareTrack Clinic API running on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
+    });
+};
+
+start();
 
 module.exports = app; // exported for testing

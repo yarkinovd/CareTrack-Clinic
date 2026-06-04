@@ -1,28 +1,26 @@
 /**
  * config/db.js
- * PostgreSQL connection pool.
+ * PostgreSQL connection pool + auto-migration on startup.
  *
- * Uses the `pg` Pool so that connections are reused across requests
- * rather than opened/closed on every query. On Render the DATABASE_URL
- * already includes the ssl=require parameter, so we enable ssl only when
- * not running locally.
+ * runMigrations() reads schema.sql and seed.sql and executes them against
+ * the database every time the server starts. All statements use
+ * IF NOT EXISTS / ON CONFLICT DO NOTHING so repeated runs are safe.
  */
 
 const { Pool } = require('pg');
+const fs   = require('fs');
+const path = require('path');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    // Render's managed Postgres requires SSL; skip in local dev unless overridden
     ssl: isProduction ? { rejectUnauthorized: false } : false,
-    // Pool tuning — sensible defaults for a small clinic workload
-    max: 10,               // maximum simultaneous connections
+    max: 10,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
 });
 
-// Emit a single log on first successful connection
 pool.on('connect', () => {
     if (process.env.NODE_ENV !== 'test') {
         console.log('[DB] PostgreSQL pool connection established');
@@ -31,21 +29,36 @@ pool.on('connect', () => {
 
 pool.on('error', (err) => {
     console.error('[DB] Unexpected pool client error:', err.message);
-    process.exit(1); // crash fast — let Render restart the service
+    process.exit(1);
 });
 
 /**
- * query(text, params)
- * Thin wrapper so controllers import one function rather than the pool.
- * Always returns a pg QueryResult; destructure .rows as needed.
+ * runMigrations()
+ * Reads schema.sql then seed.sql from the sql/ folder and executes them.
+ * Safe to call on every startup — all SQL is idempotent.
  */
-const query = (text, params) => pool.query(text, params);
+const runMigrations = async () => {
+    const sqlDir  = path.join(__dirname, '..', 'sql');
+    const files   = ['schema.sql', 'seed.sql'];
+    const client  = await pool.connect();
 
-/**
- * getClient()
- * Returns a dedicated client for multi-statement transactions.
- * Caller MUST call client.release() in a finally block.
- */
+    try {
+        for (const file of files) {
+            const filePath = path.join(sqlDir, file);
+            const sql      = fs.readFileSync(filePath, 'utf8');
+            console.log(`[DB] Running migration: ${file}`);
+            await client.query(sql);
+            console.log(`[DB] Migration complete: ${file}`);
+        }
+    } catch (err) {
+        console.error('[DB] Migration failed:', err.message);
+        throw err; // crash the server — misconfigured DB shouldn't serve requests
+    } finally {
+        client.release();
+    }
+};
+
+const query     = (text, params) => pool.query(text, params);
 const getClient = () => pool.connect();
 
-module.exports = { query, getClient, pool };
+module.exports = { query, getClient, pool, runMigrations };

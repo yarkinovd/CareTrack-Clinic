@@ -1,26 +1,8 @@
 -- =============================================================================
 -- CareTrack Clinic — Seed / Mock Data
--- Run AFTER schema.sql. Passwords pre-hashed with bcrypt (cost=10).
--- Plain-text passwords for dev login:
---   admin       → Admin@1234
---   clinician   → Clinic@1234
---   receptionist→ Recept@1234
+-- Users are seeded via JavaScript (db.js) so bcrypt hashes are correct.
+-- This file seeds only doctors, patients, and diagnoses.
 -- =============================================================================
-
--- -----------------------------------------------------------------------------
--- USERS (bcrypt hash of the passwords above, cost factor 10)
--- -----------------------------------------------------------------------------
-INSERT INTO users (username, email, password_hash, role) VALUES
-    ('admin',        'admin@caretrack.com',
-     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh/.',
-     'admin'),
-    ('dr_wilson',    'wilson@caretrack.com',
-     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh/.',
-     'clinician'),
-    ('receptionist', 'reception@caretrack.com',
-     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh/.',
-     'receptionist')
-ON CONFLICT (username) DO NOTHING;
 
 -- -----------------------------------------------------------------------------
 -- DOCTORS (3 required by BTEC)

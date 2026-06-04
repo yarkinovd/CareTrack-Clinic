@@ -7,9 +7,10 @@
  * IF NOT EXISTS / ON CONFLICT DO NOTHING so repeated runs are safe.
  */
 
-const { Pool } = require('pg');
-const fs   = require('fs');
-const path = require('path');
+const { Pool }  = require('pg');
+const bcrypt    = require('bcryptjs');
+const fs        = require('fs');
+const path      = require('path');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -38,23 +39,50 @@ pool.on('error', (err) => {
  * Safe to call on every startup — all SQL is idempotent.
  */
 const runMigrations = async () => {
-    const sqlDir  = path.join(__dirname, '..', 'sql');
-    const files   = ['schema.sql', 'seed.sql'];
-    const client  = await pool.connect();
+    const sqlDir = path.join(__dirname, '..', 'sql');
+    const client = await pool.connect();
 
     try {
-        for (const file of files) {
-            const filePath = path.join(sqlDir, file);
-            const sql      = fs.readFileSync(filePath, 'utf8');
-            console.log(`[DB] Running migration: ${file}`);
-            await client.query(sql);
-            console.log(`[DB] Migration complete: ${file}`);
-        }
+        // 1. Schema — tables, indexes, triggers
+        const schema = fs.readFileSync(path.join(sqlDir, 'schema.sql'), 'utf8');
+        console.log('[DB] Running migration: schema.sql');
+        await client.query(schema);
+        console.log('[DB] Migration complete: schema.sql');
+
+        // 2. Seed — doctors, patients, diagnoses
+        const seed = fs.readFileSync(path.join(sqlDir, 'seed.sql'), 'utf8');
+        console.log('[DB] Running migration: seed.sql');
+        await client.query(seed);
+        console.log('[DB] Migration complete: seed.sql');
+
+        // 3. Seed users via JS so bcrypt hashes are correct
+        await seedUsers(client);
     } catch (err) {
         console.error('[DB] Migration failed:', err.message);
-        throw err; // crash the server — misconfigured DB shouldn't serve requests
+        throw err;
     } finally {
         client.release();
+    }
+};
+
+// Default users — all use Admin@1234 as password
+const seedUsers = async (client) => {
+    const users = [
+        { username: 'admin',        email: 'admin@caretrack.com',      password: 'Admin@1234', role: 'admin' },
+        { username: 'dr_wilson',    email: 'wilson@caretrack.com',     password: 'Admin@1234', role: 'clinician' },
+        { username: 'receptionist', email: 'reception@caretrack.com',  password: 'Admin@1234', role: 'receptionist' },
+    ];
+
+    for (const u of users) {
+        const exists = await client.query('SELECT id FROM users WHERE username = $1', [u.username]);
+        if (exists.rows.length === 0) {
+            const hash = await bcrypt.hash(u.password, 10);
+            await client.query(
+                'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)',
+                [u.username, u.email, hash, u.role]
+            );
+            console.log(`[DB] Seeded user: ${u.username} (${u.role})`);
+        }
     }
 };
 

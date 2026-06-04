@@ -40,13 +40,13 @@ async function request(endpoint, options = {}) {
 
     const response = await fetch(`${API_BASE}${endpoint}`, config);
 
-    // Auto-logout on expired / invalid token
-    if (response.status === 401) {
+    const data = await response.json();
+
+    // Auto-logout on 401 — but NOT on the login endpoint itself
+    if (response.status === 401 && endpoint !== '/auth/login') {
         Auth.logout();
         throw new Error('Session expired. Please log in again.');
     }
-
-    const data = await response.json();
 
     if (!response.ok) {
         throw new Error(data.message || `Request failed with status ${response.status}`);

@@ -108,10 +108,9 @@ img { max-width: 100%; display: block; }
     border-radius: 4px;
 }
 
-/* ── App Layout (CSS Grid) ───────────────────────────────────────────────── */
+/* ── App Layout ──────────────────────────────────────────────────────────── */
+/* Sidebar is position:fixed so no grid needed — main-content uses margin-left */
 .app-layout {
-    display: grid;
-    grid-template-columns: var(--sidebar-width) 1fr;
     min-height: 100vh;
 }
 
@@ -335,7 +334,7 @@ img { max-width: 100%; display: block; }
     border-radius: var(--radius-md);
     border: 1px solid var(--color-border);
     box-shadow: var(--shadow-sm);
-    overflow: hidden;
+    overflow-x: auto;
 }
 
 table {
@@ -645,8 +644,6 @@ tbody td {
 
     .main-content { margin-left: 0; }
     .topbar-menu-btn { display: flex; }
-
-    .app-layout { grid-template-columns: 1fr; }
 
     .view-toolbar { flex-direction: column; align-items: stretch; }
     .search-group { min-width: unset; }

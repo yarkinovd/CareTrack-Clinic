@@ -119,19 +119,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Attach trigger to each mutable table
-CREATE TRIGGER trg_users_updated_at
+-- Attach trigger to each mutable table (OR REPLACE is idempotent — safe on re-runs)
+CREATE OR REPLACE TRIGGER trg_users_updated_at
     BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
-CREATE TRIGGER trg_doctors_updated_at
+CREATE OR REPLACE TRIGGER trg_doctors_updated_at
     BEFORE UPDATE ON doctors
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
-CREATE TRIGGER trg_patients_updated_at
+CREATE OR REPLACE TRIGGER trg_patients_updated_at
     BEFORE UPDATE ON patients
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
-CREATE TRIGGER trg_diagnoses_updated_at
+CREATE OR REPLACE TRIGGER trg_diagnoses_updated_at
     BEFORE UPDATE ON diagnoses
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();

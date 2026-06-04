@@ -118,6 +118,9 @@ const start = async () => {
     });
 };
 
-start();
+start().catch((err) => {
+    console.error('[SERVER] Fatal startup error:', err.message);
+    process.exit(1);
+});
 
 module.exports = app; // exported for testing

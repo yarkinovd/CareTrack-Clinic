@@ -31,8 +31,10 @@ const PORT = process.env.PORT || 5000;
 
 // ─── Security ────────────────────────────────────────────────────────────────
 
-// Sets secure HTTP headers (XSS protection, no-sniff, frameguard, etc.)
-app.use(helmet());
+// Sets secure HTTP headers.
+// CSP disabled: the frontend uses inline onclick handlers in dynamically
+// generated table rows. Helmet's default script-src-attr:'none' blocks them.
+app.use(helmet({ contentSecurityPolicy: false }));
 
 // CORS — if CORS_ORIGINS=* allow all, otherwise check against comma-separated list
 const corsOriginsSetting = process.env.CORS_ORIGINS || 'http://localhost:3000';

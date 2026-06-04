@@ -179,7 +179,7 @@
         <!-- Dashboard -->
         <section id="view-dashboard" class="view active">
             <div class="stats-grid" id="stats-grid">
-                <div class="stat-card">
+                <div class="stat-card" id="stat-doctors-card">
                     <div class="stat-icon blue"><i data-feather="user-check"></i></div>
                     <div class="stat-info">
                         <span class="stat-number" id="stat-doctors">—</span>
@@ -198,6 +198,20 @@
                     <div class="stat-info">
                         <span class="stat-number" id="stat-diagnoses">—</span>
                         <span class="stat-label">Diagnoses</span>
+                    </div>
+                </div>
+                <div class="stat-card" id="stat-pending-card">
+                    <div class="stat-icon orange"><i data-feather="clock"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-number" id="stat-pending">—</span>
+                        <span class="stat-label">Pending</span>
+                    </div>
+                </div>
+                <div class="stat-card" id="stat-completed-card">
+                    <div class="stat-icon green"><i data-feather="check-circle"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-number" id="stat-completed">—</span>
+                        <span class="stat-label">Completed</span>
                     </div>
                 </div>
             </div>

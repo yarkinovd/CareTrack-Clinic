@@ -370,29 +370,59 @@ const App = (() => {
     // ── Dashboard ─────────────────────────────────────────────────────────
 
     const loadDashboard = async () => {
-        // Fetch counts in parallel
-        const promises = [
-            Api.doctors.getAll(),
-            Api.patients.getAll(),
-        ];
+        const role = Auth.getUser()?.role;
 
-        // Clinicians & admins also see diagnosis count
-        if (Auth.can('admin', 'clinician')) {
-            promises.push(Api.diagnoses.getAll());
+        // Configure which stat cards are visible for this role
+        $('stat-doctors-card').style.display   = role === 'clinician' ? 'none' : '';
+        $('stat-diagnoses-card').style.display = role === 'clinician' || role === 'receptionist' ? 'none' : '';
+        $('stat-pending-card').style.display   = role === 'clinician' ? '' : 'none';
+        $('stat-completed-card').style.display = role === 'clinician' ? '' : 'none';
+
+        if (role === 'clinician') {
+            try {
+                const [ptRes, apptRes] = await Promise.all([
+                    Api.patients.getAll(),
+                    Api.appointments.getAll(),
+                ]);
+
+                $('stat-patients').textContent  = ptRes.count;
+                $('stat-pending').textContent   = apptRes.data.filter((a) => a.status === 'pending').length;
+                $('stat-completed').textContent = apptRes.data.filter((a) => a.status === 'completed').length;
+
+                // Recent table: pending patients first
+                const pending = ptRes.data.filter((p) => p.has_pending_appointment).slice(0, 5);
+                $('recent-patients-table').innerHTML = pending.length
+                    ? `<table>
+                        <thead><tr><th>Name</th><th>Gender</th><th>Status</th></tr></thead>
+                        <tbody>
+                            ${pending.map((p) => `
+                                <tr>
+                                    <td><a style="color:var(--color-primary);cursor:pointer"
+                                        onclick="App.navigate('patient-profile',${p.id})">${escHtml(p.name)}</a></td>
+                                    <td>${p.gender}</td>
+                                    <td><span class="badge badge-pending">Pending</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                      </table>`
+                    : emptyHTML('No pending patients.');
+                renderIcons();
+            } catch (err) {
+                console.error('Dashboard load error:', err);
+            }
+            return;
         }
+
+        // Admin / receptionist
+        const promises = [Api.doctors.getAll(), Api.patients.getAll()];
+        if (role === 'admin') promises.push(Api.diagnoses.getAll());
 
         try {
             const [drRes, ptRes, dgRes] = await Promise.all(promises);
-            $('stat-doctors').textContent   = drRes.count;
-            $('stat-patients').textContent  = ptRes.count;
+            $('stat-doctors').textContent  = drRes.count;
+            $('stat-patients').textContent = ptRes.count;
             if (dgRes) $('stat-diagnoses').textContent = dgRes.count;
 
-            // Hide diagnosis stat card for receptionist
-            if (!Auth.can('admin', 'clinician')) {
-                $('stat-diagnoses-card').style.display = 'none';
-            }
-
-            // Recent patients table (last 5)
             const recent = ptRes.data.slice(0, 5);
             $('recent-patients-table').innerHTML = recent.length
                 ? `<table>

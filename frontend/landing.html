@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CareTrack — Your Health, Our Priority</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --blue:        #2563eb;
+            --blue-dark:   #1d4ed8;
+            --blue-light:  #eff6ff;
+            --text:        #0f172a;
+            --muted:       #64748b;
+            --border:      #e2e8f0;
+            --bg:          #f8fafc;
+            --white:       #ffffff;
+            --shadow:      0 4px 6px -1px rgba(0,0,0,.08), 0 2px 4px -2px rgba(0,0,0,.06);
+            --shadow-lg:   0 10px 15px -3px rgba(0,0,0,.1),  0 4px  6px -4px rgba(0,0,0,.08);
+            --shadow-xl:   0 20px 25px -5px rgba(0,0,0,.1),  0 8px 10px -6px rgba(0,0,0,.06);
+            --radius:      12px;
+            --radius-lg:   20px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            background: var(--white);
+            line-height: 1.6;
+        }
+
+        img { max-width: 100%; height: auto; display: block; }
+        a   { text-decoration: none; color: inherit; }
+
+        .container { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+
+        /* ── Buttons ───────────────────────────────────────────── */
+        .btn {
+            display: inline-flex; align-items: center; gap: .4rem;
+            padding: .625rem 1.35rem;
+            border-radius: 9px;
+            font-size: .9rem; font-weight: 600;
+            cursor: pointer; border: none;
+            transition: all .2s;
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background: var(--blue); color: white;
+        }
+        .btn-primary:hover {
+            background: var(--blue-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(37,99,235,.35);
+        }
+        .btn-outline {
+            background: transparent;
+            color: var(--blue);
+            border: 1.5px solid var(--blue);
+        }
+        .btn-outline:hover { background: var(--blue); color: white; }
+        .btn-ghost {
+            background: transparent; color: var(--muted);
+        }
+        .btn-ghost:hover { color: var(--blue); background: var(--blue-light); }
+        .btn-white {
+            background: white; color: var(--blue); font-weight: 700;
+        }
+        .btn-white:hover { background: var(--blue-light); }
+        .btn-lg { padding: .875rem 2.1rem; font-size: 1rem; border-radius: 11px; }
+
+        /* ── Navbar ────────────────────────────────────────────── */
+        .navbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+            background: rgba(255,255,255,.88);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(226,232,240,.55);
+            transition: box-shadow .3s;
+        }
+        .navbar.scrolled { box-shadow: var(--shadow); }
+        .navbar-inner {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            height: 68px; gap: 2rem;
+        }
+        .logo {
+            display: flex; align-items: center; gap: .55rem;
+            font-size: 1.2rem; font-weight: 800;
+            color: var(--blue); letter-spacing: -.02em;
+        }
+        .logo-mark {
+            width: 36px; height: 36px;
+            background: var(--blue); border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1rem; font-weight: 700;
+        }
+        .nav-links {
+            display: flex; align-items: center; gap: 2.2rem; list-style: none;
+        }
+        .nav-links a {
+            font-size: .875rem; font-weight: 500; color: var(--muted);
+            transition: color .2s;
+        }
+        .nav-links a:hover { color: var(--blue); }
+        .nav-actions { display: flex; align-items: center; gap: .6rem; }
+
+        /* ── Hero ──────────────────────────────────────────────── */
+        .hero {
+            min-height: 100vh;
+            padding: 110px 0 72px;
+            background: linear-gradient(140deg, #eff6ff 0%, #f0f9ff 55%, #f8fafc 100%);
+            position: relative; overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute; top: -15%; right: -8%;
+            width: 700px; height: 700px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(37,99,235,.07) 0%, transparent 68%);
+            pointer-events: none;
+        }
+        .hero::after {
+            content: '';
+            position: absolute; bottom: -10%; left: -5%;
+            width: 400px; height: 400px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(14,165,233,.06) 0%, transparent 68%);
+            pointer-events: none;
+        }
+        .hero-inner {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 4rem; align-items: center; position: relative; z-index: 1;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: .45rem;
+            background: rgba(37,99,235,.1); color: var(--blue);
+            padding: .38rem .95rem; border-radius: 100px;
+            font-size: .78rem; font-weight: 600;
+            margin-bottom: 1.5rem; letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+        .dot-green {
+            display: inline-block; width: 7px; height: 7px;
+            background: #22c55e; border-radius: 50%;
+        }
+        .hero h1 {
+            font-size: clamp(2.4rem, 4.2vw, 3.6rem);
+            font-weight: 900; line-height: 1.08;
+            letter-spacing: -.035em; color: var(--text);
+            margin-bottom: 1.3rem;
+        }
+        .hero h1 span { color: var(--blue); }
+        .hero-desc {
+            font-size: 1.075rem; color: var(--muted);
+            max-width: 460px; margin-bottom: 2.25rem; line-height: 1.78;
+        }
+        .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .hero-trust {
+            margin-top: 2.75rem;
+            display: flex; align-items: center; gap: 1rem;
+        }
+        .hero-avatars { display: flex; }
+        .hero-avatars img {
+            width: 38px; height: 38px; border-radius: 50%;
+            border: 2.5px solid white; margin-left: -9px;
+            object-fit: cover;
+        }
+        .hero-avatars img:first-child { margin-left: 0; }
+        .hero-trust-text { font-size: .83rem; color: var(--muted); }
+        .hero-trust-text strong { color: var(--text); }
+        .hero-visual { position: relative; }
+        .hero-img-main {
+            width: 100%; height: 520px;
+            object-fit: cover; object-position: center;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+        }
+        .float-card {
+            position: absolute;
+            background: white; border-radius: 14px;
+            padding: 1rem 1.3rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,.12);
+            font-size: .84rem; min-width: 160px;
+        }
+        .float-card.c1 { bottom: -18px; left: -28px; }
+        .float-card.c2 { top:  28px;  right: -18px; }
+        .fc-label { color: var(--muted); font-size: .73rem; margin-bottom: .2rem; font-weight: 500; }
+        .fc-value { font-weight: 800; font-size: 1.15rem; color: var(--text); }
+        .fc-sub   { font-size: .73rem; color: var(--muted); margin-top: .15rem; }
+
+        /* ── Stats bar ─────────────────────────────────────────── */
+        .stats-bar { background: var(--blue); padding: 3rem 0; }
+        .stats-row {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem; text-align: center;
+        }
+        .stat-number {
+            font-size: 2.6rem; font-weight: 900; color: white;
+            line-height: 1; letter-spacing: -.04em;
+        }
+        .stat-label {
+            font-size: .875rem; color: rgba(255,255,255,.72);
+            margin-top: .4rem; font-weight: 500;
+        }
+
+        /* ── Section shared ────────────────────────────────────── */
+        section { padding: 96px 0; }
+        .section-tag {
+            display: inline-block;
+            background: var(--blue-light); color: var(--blue);
+            padding: .33rem .88rem; border-radius: 100px;
+            font-size: .76rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: .055em;
+            margin-bottom: .9rem;
+        }
+        .section-title {
+            font-size: clamp(1.9rem, 3.2vw, 2.55rem);
+            font-weight: 800; letter-spacing: -.03em;
+            line-height: 1.18; color: var(--text);
+            margin-bottom: .7rem;
+        }
+        .section-sub {
+            font-size: .975rem; color: var(--muted);
+            max-width: 550px; line-height: 1.78;
+        }
+        .section-head { margin-bottom: 3.5rem; }
+        .section-head.center { text-align: center; }
+        .section-head.center .section-sub { margin: 0 auto; }
+
+        /* ── Services ──────────────────────────────────────────── */
+        .services { background: var(--bg); }
+        .services-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem;
+        }
+        .svc-card {
+            background: white; border-radius: var(--radius);
+            padding: 2rem 1.75rem;
+            border: 1px solid var(--border);
+            transition: all .28s;
+        }
+        .svc-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--blue);
+        }
+        .svc-icon {
+            width: 54px; height: 54px; border-radius: 14px;
+            background: var(--blue-light);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1.25rem;
+        }
+        .svc-icon svg { width: 24px; height: 24px; stroke: var(--blue); }
+        .svc-card h3 {
+            font-size: 1.05rem; font-weight: 700; color: var(--text);
+            margin-bottom: .45rem;
+        }
+        .svc-card p { font-size: .855rem; color: var(--muted); line-height: 1.72; }
+
+        /* ── Doctors ───────────────────────────────────────────── */
+        .doctors-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;
+        }
+        .doc-card {
+            background: white; border-radius: var(--radius-lg);
+            overflow: hidden; border: 1px solid var(--border);
+            transition: all .28s;
+        }
+        .doc-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-xl); }
+        .doc-img {
+            width: 100%; height: 290px;
+            object-fit: cover; object-position: top center;
+        }
+        .doc-body { padding: 1.5rem; }
+        .doc-body h3 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: .2rem; }
+        .doc-spec {
+            font-size: .78rem; font-weight: 700; color: var(--blue);
+            text-transform: uppercase; letter-spacing: .06em; margin-bottom: .75rem;
+        }
+        .doc-bio { font-size: .845rem; color: var(--muted); line-height: 1.65; }
+        .doc-meta {
+            display: flex; gap: 1.5rem; margin-top: 1rem; padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+        .dm-item { font-size: .78rem; color: var(--muted); }
+        .dm-item strong { display: block; font-size: .88rem; color: var(--text); font-weight: 700; }
+
+        /* ── About ─────────────────────────────────────────────── */
+        .about { background: var(--bg); }
+        .about-inner {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 5rem; align-items: center;
+        }
+        .about-img-wrap { position: relative; }
+        .about-img {
+            width: 100%; height: 520px;
+            object-fit: cover; border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+        }
+        .about-badge {
+            position: absolute; bottom: -18px; right: -18px;
+            background: var(--blue); color: white;
+            border-radius: var(--radius); padding: 1.25rem 1.6rem;
+            box-shadow: var(--shadow-lg); text-align: center;
+        }
+        .about-badge .big   { font-size: 2.2rem; font-weight: 900; line-height: 1; }
+        .about-badge .small { font-size: .78rem; opacity: .85; margin-top: .25rem; }
+        .about-list { list-style: none; margin: 1.5rem 0 2rem; }
+        .about-list li {
+            display: flex; align-items: flex-start; gap: .75rem;
+            font-size: .875rem; color: var(--muted); margin-bottom: .7rem;
+        }
+        .check-dot {
+            flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%;
+            background: var(--blue);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+            background-size: 11px; background-position: center; background-repeat: no-repeat;
+            margin-top: 1px;
+        }
+
+        /* ── Testimonials ──────────────────────────────────────── */
+        .testimonials-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+        }
+        .testi-card {
+            background: white; border-radius: var(--radius);
+            padding: 1.85rem; border: 1px solid var(--border);
+        }
+        .stars { color: #f59e0b; font-size: .95rem; letter-spacing: .1em; margin-bottom: .9rem; }
+        .testi-text {
+            font-size: .875rem; color: var(--muted); line-height: 1.78;
+            margin-bottom: 1.5rem; font-style: italic;
+        }
+        .testi-author { display: flex; align-items: center; gap: .75rem; }
+        .testi-avatar {
+            width: 44px; height: 44px; border-radius: 50%;
+            object-fit: cover; flex-shrink: 0;
+        }
+        .testi-name { font-weight: 700; font-size: .875rem; color: var(--text); }
+        .testi-role { font-size: .78rem;  color: var(--muted); }
+
+        /* ── CTA banner ────────────────────────────────────────── */
+        .cta-section {
+            background: linear-gradient(135deg, var(--blue) 0%, #1d4ed8 55%, #0ea5e9 100%);
+            padding: 96px 0; text-align: center;
+        }
+        .cta-section h2 {
+            font-size: clamp(2rem, 3.5vw, 2.9rem);
+            font-weight: 900; color: white;
+            letter-spacing: -.035em; margin-bottom: .9rem;
+        }
+        .cta-section p { font-size: 1.05rem; color: rgba(255,255,255,.8); margin-bottom: 2.5rem; }
+        .cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+        .btn-white-outline {
+            background: transparent;
+            border: 1.5px solid rgba(255,255,255,.5);
+            color: white; font-weight: 600;
+        }
+        .btn-white-outline:hover { background: rgba(255,255,255,.12); }
+
+        /* ── Footer ────────────────────────────────────────────── */
+        footer { background: #0f172a; color: rgba(255,255,255,.65); padding: 64px 0 32px; }
+        .footer-grid {
+            display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 3rem; margin-bottom: 3rem;
+        }
+        .footer-logo-line {
+            display: flex; align-items: center; gap: .5rem;
+            color: white; font-size: 1.15rem; font-weight: 800;
+            margin-bottom: .7rem;
+        }
+        .footer-logo-line .logo-mark { background: var(--blue); }
+        .footer-desc { font-size: .855rem; line-height: 1.72; }
+        .footer-col h4 {
+            color: white; font-weight: 700; font-size: .855rem;
+            margin-bottom: 1.2rem; letter-spacing: .02em;
+        }
+        .footer-links { list-style: none; }
+        .footer-links li { margin-bottom: .55rem; }
+        .footer-links a {
+            font-size: .845rem; color: rgba(255,255,255,.55); transition: color .2s;
+        }
+        .footer-links a:hover { color: white; }
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,.09); padding-top: 1.5rem;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: .78rem; flex-wrap: wrap; gap: .5rem;
+        }
+
+        /* ── Mobile nav ────────────────────────────────────────── */
+        .hamburger {
+            display: none; background: none; border: none;
+            cursor: pointer; padding: .4rem; color: var(--text);
+        }
+
+        /* ── Responsive ────────────────────────────────────────── */
+        @media (max-width: 960px) {
+            .nav-links { display: none; }
+            .hamburger { display: flex; }
+            .hero-inner { grid-template-columns: 1fr; gap: 2.5rem; }
+            .hero-visual { display: none; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .services-grid { grid-template-columns: repeat(2, 1fr); }
+            .doctors-grid { grid-template-columns: repeat(2, 1fr); }
+            .about-inner { grid-template-columns: 1fr; gap: 2.5rem; }
+            .about-img-wrap { display: none; }
+            .testimonials-grid { grid-template-columns: 1fr; }
+            .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
+        }
+        @media (max-width: 580px) {
+            .services-grid { grid-template-columns: 1fr; }
+            .doctors-grid  { grid-template-columns: 1fr; }
+            .footer-grid   { grid-template-columns: 1fr; }
+            .stats-row     { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ════════════════════ NAVBAR ════════════════════ -->
+<nav class="navbar" id="navbar">
+    <div class="container">
+        <div class="navbar-inner">
+            <a href="#" class="logo">
+                <div class="logo-mark">⚕</div>
+                CareTrack
+            </a>
+            <ul class="nav-links">
+                <li><a href="#services">Services</a></li>
+                <li><a href="#doctors">Our Doctors</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <a href="index.html" class="btn btn-ghost">Sign In</a>
+                <a href="index.html" class="btn btn-primary">Book Appointment</a>
+            </div>
+            <button class="hamburger" id="hamburger" aria-label="Open menu">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <line x1="3" y1="6"  x2="19" y2="6"/>
+                    <line x1="3" y1="12" x2="19" y2="12"/>
+                    <line x1="3" y1="18" x2="19" y2="18"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- ════════════════════ HERO ════════════════════ -->
+<section class="hero" id="home">
+    <div class="container">
+        <div class="hero-inner">
+            <div>
+                <div class="hero-badge">
+                    <span class="dot-green"></span>
+                    Trusted Healthcare Provider
+                </div>
+                <h1>Advanced Care,<br><span>Compassionate</span><br>Medicine.</h1>
+                <p class="hero-desc">
+                    CareTrack connects patients with world-class specialists for personalised care —
+                    from first appointment to full recovery, managed in one seamless platform.
+                </p>
+                <div class="hero-actions">
+                    <a href="index.html" class="btn btn-primary btn-lg">Book Appointment</a>
+                    <a href="#services"  class="btn btn-outline  btn-lg">Our Services</a>
+                </div>
+                <div class="hero-trust">
+                    <div class="hero-avatars">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80" alt="patient" />
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80" alt="patient" />
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80" alt="patient" />
+                        <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=80&q=80" alt="patient" />
+                    </div>
+                    <div class="hero-trust-text">
+                        <strong>12,000+ patients</strong> trust us with their health
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <img
+                    src="https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&w=900&q=85"
+                    alt="CareTrack modern medical facility"
+                    class="hero-img-main"
+                />
+                <div class="float-card c1">
+                    <div class="fc-label">Today's Appointments</div>
+                    <div class="fc-value">48 Scheduled</div>
+                    <div class="fc-sub"><span class="dot-green"></span> 12 in progress</div>
+                </div>
+                <div class="float-card c2">
+                    <div class="fc-label">Patient Satisfaction</div>
+                    <div class="fc-value">98.4%</div>
+                    <div class="fc-sub">Based on 3,200 reviews</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════ STATS ════════════════════ -->
+<div class="stats-bar">
+    <div class="container">
+        <div class="stats-row">
+            <div>
+                <div class="stat-number">12,000+</div>
+                <div class="stat-label">Patients Treated</div>
+            </div>
+            <div>
+                <div class="stat-number">85+</div>
+                <div class="stat-label">Specialist Doctors</div>
+            </div>
+            <div>
+                <div class="stat-number">15</div>
+                <div class="stat-label">Years of Excellence</div>
+            </div>
+            <div>
+                <div class="stat-number">98%</div>
+                <div class="stat-label">Satisfaction Rate</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ════════════════════ SERVICES ════════════════════ -->
+<section class="services" id="services">
+    <div class="container">
+        <div class="section-head center">
+            <span class="section-tag">What We Offer</span>
+            <h2 class="section-title">Comprehensive Medical Services</h2>
+            <p class="section-sub">From routine check-ups to advanced diagnostics, our multidisciplinary team delivers expert care across every specialty.</p>
+        </div>
+        <div class="services-grid">
+
+            <div class="svc-card">
+                <div class="svc-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                    </svg>
+                </div>
+                <h3>Cardiology</h3>
+                <p>Expert evaluation and treatment for all heart conditions. From ECG diagnostics to advanced interventional procedures, your heart health is our priority.</p>
+            </div>
+
+            <div class="svc-card">
+                <div class="svc-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M5 14.5l-1.57.393A9.065 9.065 0 0012 15a9.065 9.065 0 006.23-.693L19.8 15.3m-14.8 0l1.402 1.402c-1.232 1.232-.65 3.318 1.067 3.611A48.309 48.309 0 0012 21c2.773 0 5.491-.235 8.135-.687 1.718-.293 2.3-2.379 1.067-3.61L19.8 15.3" />
+                    </svg>
+                </div>
+                <h3>Neurology</h3>
+                <p>Advanced diagnosis and management of neurological disorders using cutting-edge imaging and personalised treatment protocols.</p>
+            </div>
+
+            <div class="svc-card">
+                <div class="svc-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                    </svg>
+                </div>
+                <h3>General Practice</h3>
+                <p>Comprehensive primary care for the whole family — regular screenings, preventive care, and long-term chronic disease management.</p>
+            </div>
+
+            <div class="svc-card">
+                <div class="svc-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                    </svg>
+                </div>
+                <h3>Diagnostics</h3>
+                <p>State-of-the-art laboratory testing and imaging services. Fast, accurate results to support timely, well-informed clinical decisions.</p>
+            </div>
+
+            <div class="svc-card">
+                <div class="svc-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z" />
+                    </svg>
+                </div>
+                <h3>Orthopedics</h3>
+                <p>Specialised care for musculoskeletal conditions including sports injuries, joint replacements, and spinal treatments.</p>
+            </div>
+
+            <div class="svc-card">
+                <div class="svc-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+                    </svg>
+                </div>
+                <h3>Dermatology</h3>
+                <p>Complete skin health solutions — from cosmetic consultations to complex dermatological conditions — handled by certified specialists.</p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════ DOCTORS ════════════════════ -->
+<section id="doctors">
+    <div class="container">
+        <div class="section-head center">
+            <span class="section-tag">Meet the Team</span>
+            <h2 class="section-title">Our Featured Specialists</h2>
+            <p class="section-sub">Board-certified physicians with decades of combined experience, committed to delivering outstanding outcomes for every patient.</p>
+        </div>
+        <div class="doctors-grid">
+
+            <div class="doc-card">
+                <img
+                    src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&h=580&q=82"
+                    alt="Dr. Sarah Mitchell"
+                    class="doc-img"
+                />
+                <div class="doc-body">
+                    <h3>Dr. Sarah Mitchell</h3>
+                    <div class="doc-spec">Cardiology</div>
+                    <p class="doc-bio">Board-certified cardiologist with 18 years of experience in interventional cardiology and advanced heart failure management.</p>
+                    <div class="doc-meta">
+                        <div class="dm-item"><strong>18+ yrs</strong>Experience</div>
+                        <div class="dm-item"><strong>2,400+</strong>Patients</div>
+                        <div class="dm-item"><strong>4.9 ★</strong>Rating</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="doc-card">
+                <img
+                    src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=600&h=580&q=82"
+                    alt="Dr. James Okafor"
+                    class="doc-img"
+                />
+                <div class="doc-body">
+                    <h3>Dr. James Okafor</h3>
+                    <div class="doc-spec">Neurology</div>
+                    <p class="doc-bio">Renowned neurologist specialising in epilepsy, stroke rehabilitation, and the management of neurodegenerative diseases.</p>
+                    <div class="doc-meta">
+                        <div class="dm-item"><strong>22+ yrs</strong>Experience</div>
+                        <div class="dm-item"><strong>3,100+</strong>Patients</div>
+                        <div class="dm-item"><strong>4.8 ★</strong>Rating</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="doc-card">
+                <img
+                    src="https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&w=600&h=580&q=82"
+                    alt="Dr. Priya Sharma"
+                    class="doc-img"
+                />
+                <div class="doc-body">
+                    <h3>Dr. Priya Sharma</h3>
+                    <div class="doc-spec">General Practice</div>
+                    <p class="doc-bio">Compassionate primary care physician focused on preventive health, chronic disease management, and long-term family wellness.</p>
+                    <div class="doc-meta">
+                        <div class="dm-item"><strong>14+ yrs</strong>Experience</div>
+                        <div class="dm-item"><strong>5,800+</strong>Patients</div>
+                        <div class="dm-item"><strong>5.0 ★</strong>Rating</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════ ABOUT ════════════════════ -->
+<section class="about" id="about">
+    <div class="container">
+        <div class="about-inner">
+            <div class="about-img-wrap">
+                <img
+                    src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=840&q=85"
+                    alt="CareTrack clinic interior"
+                    class="about-img"
+                />
+                <div class="about-badge">
+                    <div class="big">15+</div>
+                    <div class="small">Years of<br>Excellence</div>
+                </div>
+            </div>
+            <div>
+                <span class="section-tag">About CareTrack</span>
+                <h2 class="section-title">Healthcare Built on Trust and Innovation</h2>
+                <p class="section-sub">Since 2009, CareTrack has redefined patient care by combining clinical excellence with technology-driven workflows that put the patient first at every step.</p>
+                <ul class="about-list">
+                    <li><span class="check-dot"></span>Integrated digital health records for seamless care continuity</li>
+                    <li><span class="check-dot"></span>Multidisciplinary teams collaborating on complex cases</li>
+                    <li><span class="check-dot"></span>Transparent diagnosis and treatment planning for every patient</li>
+                    <li><span class="check-dot"></span>24/7 patient portal access to appointments and medical history</li>
+                    <li><span class="check-dot"></span>Strict privacy standards and full data-security compliance</li>
+                </ul>
+                <a href="index.html" class="btn btn-primary btn-lg">Get Started Today</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════ TESTIMONIALS ════════════════════ -->
+<section id="testimonials">
+    <div class="container">
+        <div class="section-head center">
+            <span class="section-tag">Patient Stories</span>
+            <h2 class="section-title">What Our Patients Say</h2>
+            <p class="section-sub">Real experiences from people whose lives have been changed by the care they received at CareTrack.</p>
+        </div>
+        <div class="testimonials-grid">
+
+            <div class="testi-card">
+                <div class="stars">★★★★★</div>
+                <p class="testi-text">"Dr. Mitchell diagnosed my heart condition that two other doctors had missed. The online portal made it easy to track my progress and book follow-ups. I feel genuinely cared for."</p>
+                <div class="testi-author">
+                    <img
+                        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
+                        alt="Maria González"
+                        class="testi-avatar"
+                    />
+                    <div>
+                        <div class="testi-name">Maria González</div>
+                        <div class="testi-role">Cardiology Patient</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testi-card">
+                <div class="stars">★★★★★</div>
+                <p class="testi-text">"As someone with a chronic neurological condition, having all my records in one place and being able to message my doctor directly has completely transformed how I manage my health."</p>
+                <div class="testi-author">
+                    <img
+                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80"
+                        alt="David Lawson"
+                        class="testi-avatar"
+                    />
+                    <div>
+                        <div class="testi-name">David Lawson</div>
+                        <div class="testi-role">Neurology Patient</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testi-card">
+                <div class="stars">★★★★★</div>
+                <p class="testi-text">"From reception to the specialists, everyone is professional and empathetic. My whole family now uses CareTrack — it is genuinely the best clinic we have ever been to."</p>
+                <div class="testi-author">
+                    <img
+                        src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=100&q=80"
+                        alt="Aisha Thompson"
+                        class="testi-avatar"
+                    />
+                    <div>
+                        <div class="testi-name">Aisha Thompson</div>
+                        <div class="testi-role">General Practice Patient</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════ CTA ════════════════════ -->
+<section class="cta-section" id="contact">
+    <div class="container">
+        <h2>Ready to Take Control of Your Health?</h2>
+        <p>Join thousands of patients who trust CareTrack for expert, compassionate care. Book your appointment today.</p>
+        <div class="cta-btns">
+            <a href="index.html" class="btn btn-white btn-lg">Book an Appointment</a>
+            <a href="index.html" class="btn btn-white-outline btn-lg">Sign In to Portal</a>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════ FOOTER ════════════════════ -->
+<footer>
+    <div class="container">
+        <div class="footer-grid">
+            <div>
+                <div class="footer-logo-line">
+                    <div class="logo-mark">⚕</div>
+                    CareTrack
+                </div>
+                <p class="footer-desc">Modern healthcare management for patients, doctors, and clinics. Bringing clarity and continuity to every care journey since 2009.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Services</h4>
+                <ul class="footer-links">
+                    <li><a href="#services">Cardiology</a></li>
+                    <li><a href="#services">Neurology</a></li>
+                    <li><a href="#services">Orthopedics</a></li>
+                    <li><a href="#services">Dermatology</a></li>
+                    <li><a href="#services">General Practice</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Portal</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html">Patient Login</a></li>
+                    <li><a href="index.html">Doctor Portal</a></li>
+                    <li><a href="index.html">Admin Panel</a></li>
+                    <li><a href="index.html">Register</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Contact</h4>
+                <ul class="footer-links">
+                    <li><a href="#">123 Medical Drive</a></li>
+                    <li><a href="#">New York, NY 10001</a></li>
+                    <li><a href="#">+1 (555) 012-3456</a></li>
+                    <li><a href="#">info@caretrack.health</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© 2025 CareTrack. All rights reserved.</span>
+            <span>Privacy Policy · Terms of Service</span>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // Navbar shadow on scroll
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+        navbar.classList.toggle('scrolled', window.scrollY > 20);
+    });
+
+    // Simple counter animation for stats
+    const animateCounters = () => {
+        document.querySelectorAll('.stat-number').forEach((el) => {
+            const text = el.textContent;
+            const num  = parseFloat(text.replace(/[^0-9.]/g, ''));
+            const suffix = text.replace(/[0-9.,]/g, '');
+            if (isNaN(num)) return;
+            let start = 0;
+            const duration = 1800;
+            const step = (timestamp) => {
+                if (!start) start = timestamp;
+                const progress = Math.min((timestamp - start) / duration, 1);
+                const ease = 1 - Math.pow(1 - progress, 3);
+                el.textContent = (num > 100
+                    ? Math.floor(ease * num).toLocaleString()
+                    : (ease * num).toFixed(num % 1 !== 0 ? 0 : 0)) + suffix;
+                if (progress < 1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+        });
+    };
+
+    // Trigger counters when stats bar enters the viewport
+    const statsBar = document.querySelector('.stats-bar');
+    const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            animateCounters();
+            observer.disconnect();
+        }
+    }, { threshold: 0.4 });
+    observer.observe(statsBar);
+</script>
+</body>
+</html>

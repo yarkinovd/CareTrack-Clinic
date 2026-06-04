@@ -114,7 +114,7 @@ const Patients = (() => {
             Api.patients.getOne(id),
             isClinician ? Promise.resolve([]) : fetchDoctors(),
         ]);
-        Modal.setBody(formHTML(patRes.data, doctors, isClinician));
+        Modal.setBody(formHTML(patRes.data, doctors, isClinician, true));
         renderIcons();
     };
 
@@ -146,7 +146,7 @@ const Patients = (() => {
     };
 
     const handleUpdate = async (id) => {
-        const body = collectForm();
+        const body = collectForm(true);
         if (!body) return;
         try {
             await Api.patients.update(id, body);
@@ -180,7 +180,7 @@ const Patients = (() => {
         }
     };
 
-    const formHTML = (p = {}, doctors = [], isClinician = false) => `
+    const formHTML = (p = {}, doctors = [], isClinician = false, isEdit = false) => `
         <div class="form-group">
             <label>Full Name *</label>
             <input id="f-name" type="text" value="${escHtml(p.name || '')}" placeholder="e.g., Alice Thompson" required />
@@ -213,10 +213,24 @@ const Patients = (() => {
             </div>
             ` : ''}
         </div>
+        ${!isEdit ? `
+        <hr style="margin:1rem 0;border:none;border-top:1px solid var(--color-border)" />
+        <p style="font-size:.8rem;font-weight:600;color:var(--color-text-muted);margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.05em">Patient Login Account</p>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Username *</label>
+                <input id="f-username" type="text" placeholder="e.g., alice_t" />
+            </div>
+            <div class="form-group">
+                <label>Password *</label>
+                <input id="f-password" type="password" placeholder="Min 8 characters" />
+            </div>
+        </div>
+        ` : ''}
         <div id="form-error" class="alert alert-error" hidden></div>
     `;
 
-    const collectForm = () => {
+    const collectForm = (isEdit = false) => {
         const name      = document.getElementById('f-name')?.value.trim();
         const dob       = document.getElementById('f-dob')?.value;
         const gender    = document.getElementById('f-gender')?.value;
@@ -235,8 +249,22 @@ const Patients = (() => {
             }
             return null;
         }
+
         const body = { name, dob, phone, gender };
         if (doctor_id) body.doctor_id = Number(doctor_id);
+
+        if (!isEdit) {
+            const username = document.getElementById('f-username')?.value.trim();
+            const password = document.getElementById('f-password')?.value;
+            if (!username || !password) {
+                const err = document.getElementById('form-error');
+                if (err) { err.textContent = 'Username and password are required.'; err.hidden = false; }
+                return null;
+            }
+            body.username = username;
+            body.password = password;
+        }
+
         return body;
     };
 

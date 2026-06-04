@@ -9,6 +9,8 @@
  *   DELETE                     → admin
  */
 
+const bcrypt            = require('bcryptjs');
+const { getClient }     = require('../config/db');
 const PatientModel      = require('../models/Patient');
 const AppointmentModel  = require('../models/Appointment');
 
@@ -82,10 +84,10 @@ const getPatientProfile = async (req, res, next) => {
     }
 };
 
-/** POST /api/patients — create a new patient */
+/** POST /api/patients — create a new patient (optionally with a login account) */
 const createPatient = async (req, res, next) => {
     try {
-        const { name, dob, phone, gender, doctor_id } = req.body;
+        const { name, dob, phone, gender, doctor_id, username, password } = req.body;
 
         if (!name || !dob || !gender || !doctor_id) {
             return res.status(400).json({
@@ -102,11 +104,48 @@ const createPatient = async (req, res, next) => {
             });
         }
 
-        // Basic date validation
         if (isNaN(Date.parse(dob))) {
             return res.status(400).json({ success: false, message: 'dob must be a valid date (YYYY-MM-DD).' });
         }
 
+        // If credentials supplied, create patient + user account atomically
+        if (username || password) {
+            if (!username || !password) {
+                return res.status(400).json({ success: false, message: 'Both username and password are required to create a login account.' });
+            }
+
+            const client = await getClient();
+            try {
+                await client.query('BEGIN');
+
+                const patRow = await client.query(
+                    `INSERT INTO patients (name, dob, phone, gender, doctor_id)
+                     VALUES ($1, $2, $3, $4, $5)
+                     RETURNING id, name, dob, phone, gender, doctor_id, registered_at, created_at, updated_at`,
+                    [name, dob, phone || null, gender, Number(doctor_id)]
+                );
+                const patient = patRow.rows[0];
+
+                const passwordHash = await bcrypt.hash(password, 10);
+                await client.query(
+                    `INSERT INTO users (username, password_hash, role, patient_id) VALUES ($1, $2, 'patient', $3)`,
+                    [username, passwordHash, patient.id]
+                );
+
+                await client.query('COMMIT');
+                return res.status(201).json({ success: true, message: 'Patient registered successfully.', data: patient });
+            } catch (txErr) {
+                await client.query('ROLLBACK');
+                if (txErr.code === '23505') {
+                    return res.status(409).json({ success: false, message: `Username "${username}" is already taken.` });
+                }
+                throw txErr;
+            } finally {
+                client.release();
+            }
+        }
+
+        // No credentials — create patient record only
         const patient = await PatientModel.create({ name, dob, phone, gender, doctor_id: Number(doctor_id) });
         res.status(201).json({ success: true, message: 'Patient registered successfully.', data: patient });
     } catch (err) {

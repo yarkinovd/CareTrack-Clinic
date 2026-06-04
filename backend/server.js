@@ -34,15 +34,16 @@ const PORT = process.env.PORT || 5000;
 // Sets secure HTTP headers (XSS protection, no-sniff, frameguard, etc.)
 app.use(helmet());
 
-// CORS — parse allowed origins from env (comma-separated list)
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000')
-    .split(',')
-    .map((o) => o.trim());
+// CORS — if CORS_ORIGINS=* allow all, otherwise check against comma-separated list
+const corsOriginsSetting = process.env.CORS_ORIGINS || 'http://localhost:3000';
+const allowAllOrigins   = corsOriginsSetting.trim() === '*';
+const allowedOrigins    = allowAllOrigins
+    ? []
+    : corsOriginsSetting.split(',').map((o) => o.trim());
 
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (e.g., Postman, server-to-server)
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (!origin || allowAllOrigins || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
             callback(new Error(`CORS policy does not allow origin: ${origin}`));

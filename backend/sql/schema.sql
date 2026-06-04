@@ -212,3 +212,17 @@ CREATE INDEX IF NOT EXISTS idx_appointments_status     ON appointments(status);
 CREATE OR REPLACE TRIGGER trg_appointments_updated_at
     BEFORE UPDATE ON appointments
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- =============================================================================
+-- MIGRATION: allow doctor deletion
+-- patients.doctor_id → nullable + SET NULL (patient stays, just unassigned)
+-- appointments.doctor_id → CASCADE (appointment history removed with doctor)
+-- =============================================================================
+ALTER TABLE patients ALTER COLUMN doctor_id DROP NOT NULL;
+ALTER TABLE patients DROP CONSTRAINT IF EXISTS patients_doctor_id_fkey;
+ALTER TABLE patients ADD CONSTRAINT patients_doctor_id_fkey
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE appointments DROP CONSTRAINT IF EXISTS appointments_doctor_id_fkey;
+ALTER TABLE appointments ADD CONSTRAINT appointments_doctor_id_fkey
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE;

@@ -101,8 +101,7 @@ const Doctors = (() => {
     const confirmDelete = (id, name) => {
         Modal.open({
             title:     'Delete Doctor',
-            body:      confirmHTML(`Are you sure you want to delete <strong>${escHtml(name)}</strong>?
-                        <br/><span class="text-sm">This will fail if the doctor still has patients assigned.</span>`),
+            body:      confirmHTML(`Delete doctor <strong>${escHtml(name)}</strong>? Their login account and appointment records will also be removed. Assigned patients will become unassigned.`),
             confirmLabel: 'Delete',
             confirmClass: 'btn-danger',
             onConfirm:    () => handleDelete(id),

@@ -60,7 +60,7 @@ const PatientModel = {
                 COUNT(DISTINCT dx.id) AS diagnosis_count,
                 ${aptSelect}
             FROM   patients p
-            JOIN   doctors  d ON d.id = p.doctor_id
+            LEFT JOIN doctors  d ON d.id = p.doctor_id
             LEFT JOIN diagnoses dx ON dx.patient_id = p.id
             ${aptJoin}
             ${where}
@@ -84,7 +84,7 @@ const PatientModel = {
                 d.contact_info,
                 p.created_at, p.updated_at
             FROM   patients p
-            JOIN   doctors  d ON d.id = p.doctor_id
+            LEFT JOIN doctors  d ON d.id = p.doctor_id
             WHERE  p.id = $1
         `;
         const result = await query(sql, [id]);
@@ -116,7 +116,7 @@ const PatientModel = {
                 d.department AS doctor_department,
                 d.contact_info AS doctor_contact
             FROM   patients p
-            JOIN   doctors  d ON d.id = p.doctor_id
+            LEFT JOIN doctors  d ON d.id = p.doctor_id
             WHERE  p.id = $1
         `;
         const patientResult = await query(patientSql, [id]);

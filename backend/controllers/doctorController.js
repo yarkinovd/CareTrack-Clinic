@@ -129,17 +129,32 @@ const updateDoctor = async (req, res, next) => {
     }
 };
 
-/** DELETE /api/doctors/:id — delete a doctor (admin only) */
+/** DELETE /api/doctors/:id — delete a doctor + linked user account (admin only) */
 const deleteDoctor = async (req, res, next) => {
+    const client = await getClient();
     try {
-        const deleted = await DoctorModel.delete(req.params.id);
-        if (!deleted) {
+        await client.query('BEGIN');
+
+        // Remove linked clinician user account(s) first
+        await client.query(`DELETE FROM users WHERE doctor_id = $1`, [req.params.id]);
+
+        // Delete the doctor (appointments CASCADE, patients.doctor_id SET NULL via FK)
+        const result = await client.query(
+            `DELETE FROM doctors WHERE id = $1 RETURNING id`,
+            [req.params.id]
+        );
+        if (!result.rows.length) {
+            await client.query('ROLLBACK');
             return res.status(404).json({ success: false, message: `Doctor with id ${req.params.id} not found.` });
         }
+
+        await client.query('COMMIT');
         res.status(200).json({ success: true, message: 'Doctor deleted successfully.' });
     } catch (err) {
-        // 23503 FK violation (patients still exist) → errorHandler returns 409
+        await client.query('ROLLBACK');
         next(err);
+    } finally {
+        client.release();
     }
 };
 

@@ -1,15 +1,3 @@
-/**
- * js/patientProfile.js
- * Renders the Comprehensive Patient Profile view.
- *
- * Profile payload (from GET /api/patients/:id/profile):
- *   {
- *     patient:   { id, name, dob, phone, gender, registered_at }
- *     doctor:    { id, name, specialty, department, contact }
- *     diagnoses: [ { id, icd_code, description, severity_level, diagnosed_at, notes } … ]
- *   }
- */
-
 const PatientProfile = (() => {
 
     const render = async (patientId) => {
@@ -26,80 +14,81 @@ const PatientProfile = (() => {
             const isPatient       = Auth.can('patient');
 
             container.innerHTML = `
-                <!-- ── Patient header ────────────────────────────── -->
+                <!-- ── Bemor sarlavhasi ──────────────────────────────── -->
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.5rem">
                     <div>
                         <h2 style="font-size:1.4rem;font-weight:700;display:flex;align-items:center;gap:.5rem">
                             ${escHtml(patient.name)}
                             ${patient.diagnosis_count > 0
-                                ? `<span class="badge badge-diagnosed">Diagnosed</span>`
-                                : `<span class="badge badge-pending">Pending</span>`}
+                                ? `<span class="badge badge-diagnosed">Tashxis qo'yilgan</span>`
+                                : `<span class="badge badge-pending">Kutilmoqda</span>`}
                         </h2>
-                        <p class="text-muted text-sm">Patient #${patient.id} · Registered ${formatDate(patient.registered_at)}</p>
+                        <p class="text-muted text-sm">Bemor #${patient.id} · Ro'yxatdan o'tgan: ${formatDate(patient.registered_at)}</p>
                     </div>
                     <div style="display:flex;gap:.5rem;flex-wrap:wrap">
                         ${isPatient ? `
                             <button class="btn btn-primary" onclick="PatientProfile.openBookModal(${patient.id})">
-                                <i data-feather="calendar"></i> Book Appointment
+                                <i data-feather="calendar"></i> Qabulga yozilish
                             </button>
                         ` : ''}
                         ${canEditPatient ? `
                             <button class="btn btn-secondary" onclick="Patients.openEditModal(${patient.id})">
-                                <i data-feather="edit-2"></i> Edit Patient
+                                <i data-feather="edit-2"></i> Tahrirlash
                             </button>
                         ` : ''}
                         ${canAddDiagnosis ? `
                             <button class="btn btn-primary" onclick="Diagnoses.openAddModal(${patient.id})">
-                                <i data-feather="plus"></i> Add Diagnosis
+                                <i data-feather="plus"></i> Tashxis qo'yish
                             </button>
                         ` : ''}
                     </div>
                 </div>
 
-                <!-- ── Two-column info grid ───────────────────────── -->
+                <!-- ── Ikki ustunli ma'lumot ─────────────────────────── -->
                 <div class="profile-grid">
 
-                    <!-- Personal Information -->
+                    <!-- Shaxsiy ma'lumotlar -->
                     <div class="profile-section">
-                        <h4>Personal Information</h4>
+                        <h4>Shaxsiy ma'lumotlar</h4>
                         <div class="profile-field">
-                            <div class="field-label">Full Name</div>
+                            <div class="field-label">To'liq ism</div>
                             <div class="field-value fw-600">${escHtml(patient.name)}</div>
                         </div>
                         <div class="profile-field">
-                            <div class="field-label">Date of Birth</div>
-                            <div class="field-value">${formatDate(patient.dob)} <span class="text-muted text-sm">(Age ${calcAge(patient.dob)})</span></div>
+                            <div class="field-label">Tug'ilgan sana</div>
+                            <div class="field-value">${formatDate(patient.dob)} <span class="text-muted text-sm">(${calcAge(patient.dob)} yosh)</span></div>
                         </div>
                         <div class="profile-field">
-                            <div class="field-label">Gender</div>
-                            <div class="field-value">${patient.gender}</div>
+                            <div class="field-label">Jinsi</div>
+                            <div class="field-value">${jinsNomi(patient.gender)}</div>
                         </div>
                         <div class="profile-field">
-                            <div class="field-label">Phone</div>
+                            <div class="field-label">Telefon</div>
                             <div class="field-value">${escHtml(patient.phone || '—')}</div>
                         </div>
                     </div>
 
-                    <!-- Assigned Doctor -->
+                    <!-- Biriktirilgan shifokor -->
                     <div class="profile-section">
-                        <h4>Assigned Doctor</h4>
+                        <h4>Biriktirilgan shifokor</h4>
+                        ${doctor ? `
                         <div class="profile-field">
-                            <div class="field-label">Name</div>
+                            <div class="field-label">Ismi</div>
                             <div class="field-value fw-600">${escHtml(doctor.name)}</div>
                         </div>
                         <div class="profile-field">
-                            <div class="field-label">Specialty</div>
+                            <div class="field-label">Mutaxassislik</div>
                             <div class="field-value">
-                                <span class="badge badge-specialty">${doctor.specialty}</span>
+                                <span class="badge badge-specialty">${mutaxassislikNomi(doctor.specialty)}</span>
                             </div>
                         </div>
                         <div class="profile-field">
-                            <div class="field-label">Department</div>
+                            <div class="field-label">Bo'lim</div>
                             <div class="field-value">${escHtml(doctor.department)}</div>
                         </div>
                         ${doctor.contact ? `
                             <div class="profile-field">
-                                <div class="field-label">Contact</div>
+                                <div class="field-label">Aloqa</div>
                                 <div class="field-value text-sm">
                                     ${doctor.contact.phone ? `📞 ${escHtml(doctor.contact.phone)}<br/>` : ''}
                                     ${doctor.contact.email ? `✉ ${escHtml(doctor.contact.email)}<br/>` : ''}
@@ -107,67 +96,68 @@ const PatientProfile = (() => {
                                 </div>
                             </div>
                         ` : ''}
+                        ` : `<p class="text-muted text-sm">Shifokor biriktirilmagan</p>`}
                     </div>
                 </div>
 
-                <!-- ── Appointments ──────────────────────────────── -->
+                <!-- ── Qabullar ──────────────────────────────────────── -->
                 <div class="profile-diagnoses" style="margin-bottom:1.5rem">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-                        <h4 style="margin:0">Appointments
+                        <h4 style="margin:0">Qabullar
                             <span class="text-muted text-sm" style="font-weight:400;font-size:.8rem">
-                                (${appointments.length} record${appointments.length !== 1 ? 's' : ''})
+                                (${appointments.length} ta yozuv)
                             </span>
                         </h4>
                     </div>
                     ${appointments.length === 0
-                        ? `<div class="empty-state"><p>No appointments booked yet.</p></div>`
+                        ? `<div class="empty-state"><p>Hali qabulga yozilmagan.</p></div>`
                         : appointments.map((a) => `
                             <div class="diagnosis-card" style="align-items:center">
                                 <div>
                                     <div class="desc">${escHtml(a.doctor_name)}
-                                        <span class="badge badge-specialty" style="margin-left:.4rem;font-size:.65rem">${escHtml(a.specialty)}</span>
+                                        <span class="badge badge-specialty" style="margin-left:.4rem;font-size:.65rem">${mutaxassislikNomi(a.specialty)}</span>
                                     </div>
-                                    <div class="date">Booked: ${formatDate(a.booked_at)}</div>
+                                    <div class="date">Yozilgan: ${formatDate(a.booked_at)}</div>
                                     ${a.notes ? `<div class="notes">${escHtml(a.notes)}</div>` : ''}
                                 </div>
                                 <span class="badge ${a.status === 'pending' ? 'badge-pending' : 'badge-diagnosed'}">
-                                    ${a.status === 'pending' ? 'Pending' : 'Completed'}
+                                    ${a.status === 'pending' ? 'Kutilmoqda' : 'Yakunlangan'}
                                 </span>
                             </div>
                         `).join('')
                     }
                 </div>
 
-                <!-- ── Diagnosis History ───────────────────────────── -->
+                <!-- ── Tashxis tarixi ────────────────────────────────── -->
                 <div class="profile-diagnoses">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-                        <h4 style="margin:0">Diagnosis History
+                        <h4 style="margin:0">Tashxis tarixi
                             <span class="text-muted text-sm" style="font-weight:400;font-size:.8rem">
-                                (${diagnoses.length} record${diagnoses.length !== 1 ? 's' : ''})
+                                (${diagnoses.length} ta yozuv)
                             </span>
                         </h4>
                     </div>
 
                     ${diagnoses.length === 0
-                        ? `<div class="empty-state"><p>No diagnosis records on file for this patient.</p></div>`
+                        ? `<div class="empty-state"><p>Bu bemor uchun tashxis yozuvlari mavjud emas.</p></div>`
                         : diagnoses.map((d) => `
                             <div class="diagnosis-card">
                                 <div>
                                     <div class="icd">${escHtml(d.icd_code)}</div>
                                     <div class="desc">${escHtml(d.description)}</div>
-                                    <div class="date">Diagnosed: ${formatDate(d.diagnosed_at)}</div>
+                                    <div class="date">Tashxis qo'yilgan: ${formatDate(d.diagnosed_at)}</div>
                                     ${d.notes ? `<div class="notes">${escHtml(d.notes)}</div>` : ''}
                                 </div>
                                 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.5rem">
-                                    <span class="badge badge-${d.severity_level.toLowerCase()}">${d.severity_level}</span>
+                                    <span class="badge badge-${d.severity_level.toLowerCase()}">${darajaNomi(d.severity_level)}</span>
                                     ${canEditPatient ? `
                                         <div class="table-actions">
-                                            <button class="btn btn-secondary btn-icon" title="Edit"
+                                            <button class="btn btn-secondary btn-icon" title="Tahrirlash"
                                                 onclick="Diagnoses.openEditModal(${d.id})">
                                                 <i data-feather="edit-2"></i>
                                             </button>
                                             ${Auth.can('admin') ? `
-                                                <button class="btn btn-danger btn-icon" title="Delete"
+                                                <button class="btn btn-danger btn-icon" title="O'chirish"
                                                     onclick="Diagnoses.confirmDelete(${d.id}, '${escHtml(d.icd_code)}')">
                                                     <i data-feather="trash-2"></i>
                                                 </button>
@@ -188,7 +178,7 @@ const PatientProfile = (() => {
 
     const openBookModal = async (patientId) => {
         Modal.open({
-            title:     'Book New Appointment',
+            title:     'Qabulga yozilish',
             body:      loadingHTML(),
             onConfirm: () => handleBook(patientId),
         });
@@ -196,19 +186,19 @@ const PatientProfile = (() => {
         try {
             const res = await Api.doctors.getPublic();
             const options = res.data.map((d) =>
-                `<option value="${d.id}">${escHtml(d.name)} (${d.specialty})</option>`
+                `<option value="${d.id}">${escHtml(d.name)} (${mutaxassislikNomi(d.specialty)})</option>`
             ).join('');
             Modal.setBody(`
                 <div class="form-group">
-                    <label>Select Doctor *</label>
+                    <label>Shifokorni tanlang *</label>
                     <select id="f-book-doctor">
-                        <option value="">— select a doctor —</option>
+                        <option value="">— shifokorni tanlang —</option>
                         ${options}
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Notes (optional)</label>
-                    <textarea id="f-book-notes" placeholder="Describe your symptoms or reason for visit…"></textarea>
+                    <label>Izoh (ixtiyoriy)</label>
+                    <textarea id="f-book-notes" placeholder="Shikoyatingiz yoki tashrif sababini yozing…"></textarea>
                 </div>
                 <div id="form-error" class="alert alert-error" hidden></div>
             `);
@@ -223,14 +213,14 @@ const PatientProfile = (() => {
 
         if (!doctor_id) {
             const err = document.getElementById('form-error');
-            if (err) { err.textContent = 'Please select a doctor.'; err.hidden = false; }
+            if (err) { err.textContent = 'Iltimos, shifokorni tanlang.'; err.hidden = false; }
             return;
         }
 
         try {
             await Api.appointments.create({ doctor_id: Number(doctor_id), notes: notes || null });
             Modal.close();
-            App.showAlert('Appointment booked successfully.', 'success');
+            App.showAlert('Qabulga muvaffaqiyatli yozildingiz.', 'success');
             render(patientId);
         } catch (err) {
             Modal.showError(err.message);
@@ -240,13 +230,33 @@ const PatientProfile = (() => {
     return { render, openBookModal };
 })();
 
-// ── Small utility: calculate age from DOB string ──────────────────────────
+// ── Yosh hisoblash ────────────────────────────────────────────────────────
 function calcAge(dob) {
     if (!dob) return '?';
-    const today    = new Date();
-    const birth    = new Date(dob);
-    let age        = today.getFullYear() - birth.getFullYear();
-    const m        = today.getMonth() - birth.getMonth();
+    const today = new Date();
+    const birth = new Date(dob);
+    let age     = today.getFullYear() - birth.getFullYear();
+    const m     = today.getMonth() - birth.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
     return age;
+}
+
+// ── Global yordamchilar (patients.js dan ham ishlatiladi) ─────────────────
+function jinsNomi(val) {
+    const map = { Male: 'Erkak', Female: 'Ayol', Other: 'Boshqa' };
+    return map[val] || val;
+}
+function mutaxassislikNomi(val) {
+    const map = {
+        Cardiology:         'Kardiologiya',
+        Neurology:          'Nevrologiya',
+        Dermatology:        'Dermatologiya',
+        Orthopedics:        'Ortopediya',
+        'General Practice': 'Umumiy amaliyot',
+    };
+    return map[val] || val;
+}
+function darajaNomi(val) {
+    const map = { Low: 'Engil', Medium: "O'rta", High: "Og'ir" };
+    return map[val] || val;
 }

@@ -19,8 +19,9 @@ const morgan      = require('morgan');
 const rateLimit   = require('express-rate-limit');
 const path        = require('path');
 
-const { runMigrations } = require('./config/db');
+const { runMigrations, getClient } = require('./config/db');
 const errorHandler   = require('./middleware/errorHandler');
+const { protect, authorize } = require('./middleware/auth');
 const authRoutes     = require('./routes/authRoutes');
 const doctorRoutes   = require('./routes/doctorRoutes');
 const patientRoutes  = require('./routes/patientRoutes');
@@ -90,6 +91,31 @@ app.use('/api/doctors',   doctorRoutes);
 app.use('/api/patients',  patientRoutes);
 app.use('/api/diagnoses',    diagnosisRoutes);
 app.use('/api/appointments', appointmentRoutes);
+
+// ─── Admin: Ma'lumotlarni tozalash (faqat bir marta ishlatiladi) ──────────────
+
+app.post('/api/admin/reset-data', protect, authorize('admin'), async (req, res, next) => {
+    const client = await getClient();
+    try {
+        await client.query('BEGIN');
+        await client.query(`DELETE FROM appointments`);
+        await client.query(`DELETE FROM diagnoses`);
+        await client.query(`DELETE FROM users WHERE role IN ('clinician', 'patient')`);
+        await client.query(`DELETE FROM patients`);
+        await client.query(`DELETE FROM doctors`);
+        await client.query(`ALTER SEQUENCE IF EXISTS appointments_id_seq RESTART WITH 1`);
+        await client.query(`ALTER SEQUENCE IF EXISTS diagnoses_id_seq    RESTART WITH 1`);
+        await client.query(`ALTER SEQUENCE IF EXISTS patients_id_seq     RESTART WITH 1`);
+        await client.query(`ALTER SEQUENCE IF EXISTS doctors_id_seq      RESTART WITH 1`);
+        await client.query('COMMIT');
+        res.json({ success: true, message: 'Barcha ma\'lumotlar tozalandi. Admin va receptionist hisoblar saqlab qolindi.' });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        next(err);
+    } finally {
+        client.release();
+    }
+});
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 

@@ -183,7 +183,7 @@ const App = (() => {
                 errorEl.hidden      = false;
             } finally {
                 spinner.hidden = true;
-                btnText.textContent = 'Sign In';
+                btnText.textContent = 'Kirish';
             }
         });
     };
@@ -229,7 +229,7 @@ const App = (() => {
             errorEl.hidden = true;
 
             if (!name || !dob || !gender || !doctor_id || !username || !password) {
-                errorEl.textContent = 'All required fields must be filled in.';
+                errorEl.textContent = 'Barcha majburiy maydonlarni to\'ldiring.';
                 errorEl.hidden = false;
                 return;
             }
@@ -237,7 +237,7 @@ const App = (() => {
             const spinner = $('register-spinner');
             const btnText = $('register-btn-text');
             spinner.hidden = false;
-            btnText.textContent = 'Creating account…';
+            btnText.textContent = 'Hisob yaratilmoqda…';
 
             try {
                 const res = await Api.auth.registerPatient({ name, dob, gender, phone, doctor_id, username, password });
@@ -249,7 +249,7 @@ const App = (() => {
                 errorEl.hidden = false;
             } finally {
                 spinner.hidden = true;
-                btnText.textContent = 'Create Account';
+                btnText.textContent = 'Hisob yaratish';
             }
         });
     };
@@ -327,12 +327,12 @@ const App = (() => {
 
         // Page title
         const titles = {
-            'dashboard':       'Dashboard',
-            'doctors':         'Doctors',
-            'patients':        'Patients',
-            'diagnoses':       'Diagnoses',
-            'patient-profile': 'Patient Profile',
-            'my-profile':      'My Profile',
+            'dashboard':       'Boshqaruv paneli',
+            'doctors':         'Shifokorlar',
+            'patients':        'Bemorlar',
+            'diagnoses':       'Tashxislar',
+            'patient-profile': 'Bemor profili',
+            'my-profile':      'Mening profilim',
         };
         $('page-title').textContent = titles[viewName] || viewName;
 
@@ -389,23 +389,23 @@ const App = (() => {
                 $('stat-pending').textContent   = apptRes.data.filter((a) => a.status === 'pending').length;
                 $('stat-completed').textContent = apptRes.data.filter((a) => a.status === 'completed').length;
 
-                // Recent table: pending patients first
+                // Kutilayotgan bemorlar
                 const pending = ptRes.data.filter((p) => p.has_pending_appointment).slice(0, 5);
                 $('recent-patients-table').innerHTML = pending.length
                     ? `<table>
-                        <thead><tr><th>Name</th><th>Gender</th><th>Status</th></tr></thead>
+                        <thead><tr><th>Ism</th><th>Jinsi</th><th>Holati</th></tr></thead>
                         <tbody>
                             ${pending.map((p) => `
                                 <tr>
                                     <td><a style="color:var(--color-primary);cursor:pointer"
                                         onclick="App.navigate('patient-profile',${p.id})">${escHtml(p.name)}</a></td>
-                                    <td>${p.gender}</td>
-                                    <td><span class="badge badge-pending">Pending</span></td>
+                                    <td>${jinsNomi(p.gender)}</td>
+                                    <td><span class="badge badge-pending">Kutilmoqda</span></td>
                                 </tr>
                             `).join('')}
                         </tbody>
                       </table>`
-                    : emptyHTML('No pending patients.');
+                    : emptyHTML('Kutilayotgan bemorlar yo\'q.');
                 renderIcons();
             } catch (err) {
                 console.error('Dashboard load error:', err);
@@ -426,19 +426,19 @@ const App = (() => {
             const recent = ptRes.data.slice(0, 5);
             $('recent-patients-table').innerHTML = recent.length
                 ? `<table>
-                    <thead><tr><th>Name</th><th>Gender</th><th>Doctor</th></tr></thead>
+                    <thead><tr><th>Ism</th><th>Jinsi</th><th>Shifokor</th></tr></thead>
                     <tbody>
                         ${recent.map((p) => `
                             <tr>
                                 <td><a style="color:var(--color-primary);cursor:pointer"
                                     onclick="App.navigate('patient-profile',${p.id})">${escHtml(p.name)}</a></td>
-                                <td>${p.gender}</td>
-                                <td>${escHtml(p.doctor_name)}</td>
+                                <td>${jinsNomi(p.gender)}</td>
+                                <td>${escHtml(p.doctor_name || '—')}</td>
                             </tr>
                         `).join('')}
                     </tbody>
                   </table>`
-                : emptyHTML('No patients yet.');
+                : emptyHTML('Hali bemorlar yo\'q.');
             renderIcons();
         } catch (err) {
             console.error('Dashboard load error:', err);
@@ -498,7 +498,7 @@ const App = (() => {
     let alertTimer;
     const showAlert = (message, type = 'success') => {
         const el = $('app-alert');
-        el.textContent = (type === 'success' ? '✓ ' : '⚠ ') + message;
+        el.textContent = (type === 'success' ? '✓  ' : '⚠  ') + message;
         el.className   = `app-alert ${type}`;
         el.hidden      = false;
 

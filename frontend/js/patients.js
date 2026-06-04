@@ -1,12 +1,6 @@
-/**
- * js/patients.js
- * Patient list rendering, search/filter, CRUD modal forms.
- * Clicking a patient row navigates to the Patient Profile view.
- */
-
 const Patients = (() => {
 
-    // ── Render ────────────────────────────────────────────────────────────
+    // ── Ro'yxat ──────────────────────────────────────────────────────────
 
     const render = async (filters = {}) => {
         const container = document.getElementById('patients-table-container');
@@ -17,7 +11,7 @@ const Patients = (() => {
             const patients = res.data;
 
             if (!patients.length) {
-                container.innerHTML = emptyHTML('No patients found.');
+                container.innerHTML = emptyHTML('Bemorlar topilmadi.');
                 return;
             }
 
@@ -25,15 +19,15 @@ const Patients = (() => {
             const canDelete = Auth.can('admin');
 
             const isClinician = Auth.getUser()?.role === 'clinician';
-            const statusBadge = (p) => {
+            const holatBelgi = (p) => {
                 if (isClinician) {
                     return p.has_pending_appointment
-                        ? `<span class="badge badge-pending">Pending</span>`
-                        : `<span class="badge badge-diagnosed">Diagnosed</span>`;
+                        ? `<span class="badge badge-pending">Kutilmoqda</span>`
+                        : `<span class="badge badge-diagnosed">Tashxis qo'yilgan</span>`;
                 }
                 return Number(p.diagnosis_count) > 0
-                    ? `<span class="badge badge-diagnosed">Diagnosed</span>`
-                    : `<span class="badge badge-pending">Pending</span>`;
+                    ? `<span class="badge badge-diagnosed">Tashxis qo'yilgan</span>`
+                    : `<span class="badge badge-pending">Kutilmoqda</span>`;
             };
 
             container.innerHTML = `
@@ -41,11 +35,11 @@ const Patients = (() => {
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Name</th>
-                            <th>Status</th>
-                            <th class="hide-mobile">Gender</th>
-                            <th class="hide-mobile">Assigned Doctor</th>
-                            <th>Actions</th>
+                            <th>Ism</th>
+                            <th>Holati</th>
+                            <th class="hide-mobile">Jinsi</th>
+                            <th class="hide-mobile">Biriktirilgan shifokor</th>
+                            <th>Amallar</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -58,26 +52,26 @@ const Patients = (() => {
                                         ${escHtml(p.name)}
                                     </a>
                                 </td>
-                                <td>${statusBadge(p)}</td>
-                                <td class="hide-mobile">${p.gender}</td>
+                                <td>${holatBelgi(p)}</td>
+                                <td class="hide-mobile">${jinsNomi(p.gender)}</td>
                                 <td class="hide-mobile">
-                                    <span class="text-sm">${escHtml(p.doctor_name)}</span><br/>
-                                    <span class="badge badge-specialty" style="font-size:.65rem">${p.doctor_specialty}</span>
+                                    <span class="text-sm">${escHtml(p.doctor_name || '—')}</span><br/>
+                                    ${p.doctor_specialty ? `<span class="badge badge-specialty" style="font-size:.65rem">${mutaxassislikNomi(p.doctor_specialty)}</span>` : ''}
                                 </td>
                                 <td>
                                     <div class="table-actions">
-                                        <button class="btn btn-secondary btn-icon" title="View Profile"
+                                        <button class="btn btn-secondary btn-icon" title="Profilni ko'rish"
                                             onclick="App.navigate('patient-profile', ${p.id})">
                                             <i data-feather="eye"></i>
                                         </button>
                                         ${canEdit ? `
-                                            <button class="btn btn-secondary btn-icon" title="Edit"
+                                            <button class="btn btn-secondary btn-icon" title="Tahrirlash"
                                                 onclick="Patients.openEditModal(${p.id})">
                                                 <i data-feather="edit-2"></i>
                                             </button>
                                         ` : ''}
                                         ${canDelete ? `
-                                            <button class="btn btn-danger btn-icon" title="Delete"
+                                            <button class="btn btn-danger btn-icon" title="O'chirish"
                                                 onclick="Patients.confirmDelete(${p.id}, '${escHtml(p.name)}')">
                                                 <i data-feather="trash-2"></i>
                                             </button>
@@ -92,23 +86,23 @@ const Patients = (() => {
             renderIcons();
         } catch (err) {
             console.error('[Patients.render]', err);
-            container.innerHTML = errorHTML(err.message || 'Failed to load patients.');
+            container.innerHTML = errorHTML(err.message || 'Bemorlarni yuklashda xatolik.');
         }
     };
 
-    // ── Modal: Add Patient ────────────────────────────────────────────────
+    // ── Modal: Bemor qo'shish ─────────────────────────────────────────────
 
     const openAddModal = async () => {
-        Modal.open({ title: 'Register New Patient', body: loadingHTML(), onConfirm: handleCreate });
+        Modal.open({ title: 'Yangi bemor qo\'shish', body: loadingHTML(), onConfirm: handleCreate });
         const doctors = await fetchDoctors();
         Modal.setBody(formHTML({}, doctors));
         renderIcons();
     };
 
-    // ── Modal: Edit Patient ───────────────────────────────────────────────
+    // ── Modal: Bemorni tahrirlash ─────────────────────────────────────────
 
     const openEditModal = async (id) => {
-        Modal.open({ title: 'Edit Patient', body: loadingHTML(), onConfirm: () => handleUpdate(id) });
+        Modal.open({ title: 'Bemor ma\'lumotlarini tahrirlash', body: loadingHTML(), onConfirm: () => handleUpdate(id) });
         const isClinician = Auth.getUser()?.role === 'clinician';
         const [patRes, doctors] = await Promise.all([
             Api.patients.getOne(id),
@@ -118,19 +112,19 @@ const Patients = (() => {
         renderIcons();
     };
 
-    // ── Modal: Confirm Delete ─────────────────────────────────────────────
+    // ── Modal: O'chirishni tasdiqlash ─────────────────────────────────────
 
     const confirmDelete = (id, name) => {
         Modal.open({
-            title:        'Delete Patient',
-            body:         confirmHTML(`Delete <strong>${escHtml(name)}</strong>? All their diagnosis records will also be removed.`),
-            confirmLabel: 'Delete',
+            title:        'Bemorni o\'chirish',
+            body:         confirmHTML(`<strong>${escHtml(name)}</strong> bemorni o'chirasizmi? Barcha tashxis yozuvlari ham o'chiriladi.`),
+            confirmLabel: 'O\'chirish',
             confirmClass: 'btn-danger',
             onConfirm:    () => handleDelete(id),
         });
     };
 
-    // ── CRUD Handlers ─────────────────────────────────────────────────────
+    // ── CRUD ──────────────────────────────────────────────────────────────
 
     const handleCreate = async () => {
         const body = collectForm();
@@ -138,7 +132,7 @@ const Patients = (() => {
         try {
             await Api.patients.create(body);
             Modal.close();
-            App.showAlert('Patient registered successfully.', 'success');
+            App.showAlert('Bemor muvaffaqiyatli ro\'yxatga olindi.', 'success');
             render();
         } catch (err) {
             Modal.showError(err.message);
@@ -151,7 +145,7 @@ const Patients = (() => {
         try {
             await Api.patients.update(id, body);
             Modal.close();
-            App.showAlert('Patient updated successfully.', 'success');
+            App.showAlert('Bemor ma\'lumotlari yangilandi.', 'success');
             render();
         } catch (err) {
             Modal.showError(err.message);
@@ -162,14 +156,14 @@ const Patients = (() => {
         try {
             await Api.patients.delete(id);
             Modal.close();
-            App.showAlert('Patient deleted.', 'success');
+            App.showAlert('Bemor o\'chirildi.', 'success');
             render();
         } catch (err) {
             Modal.showError(err.message);
         }
     };
 
-    // ── Form Helpers ──────────────────────────────────────────────────────
+    // ── Forma yordamchilari ───────────────────────────────────────────────
 
     const fetchDoctors = async () => {
         try {
@@ -182,48 +176,50 @@ const Patients = (() => {
 
     const formHTML = (p = {}, doctors = [], isClinician = false, isEdit = false) => `
         <div class="form-group">
-            <label>Full Name *</label>
-            <input id="f-name" type="text" value="${escHtml(p.name || '')}" placeholder="e.g., Alice Thompson" required />
+            <label>To'liq ism *</label>
+            <input id="f-name" type="text" value="${escHtml(p.name || '')}" placeholder="Masalan: Alisher Karimov" required />
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label>Date of Birth *</label>
+                <label>Tug'ilgan sana *</label>
                 <input id="f-dob" type="date" value="${p.dob ? p.dob.split('T')[0] : ''}" required />
             </div>
             <div class="form-group">
-                <label>Gender *</label>
+                <label>Jinsi *</label>
                 <select id="f-gender">
-                    <option value="">— select —</option>
-                    ${['Male','Female','Other'].map((g) => `<option ${p.gender === g ? 'selected' : ''}>${g}</option>`).join('')}
+                    <option value="">— tanlang —</option>
+                    <option value="Male"   ${p.gender === 'Male'   ? 'selected' : ''}>Erkak</option>
+                    <option value="Female" ${p.gender === 'Female' ? 'selected' : ''}>Ayol</option>
+                    <option value="Other"  ${p.gender === 'Other'  ? 'selected' : ''}>Boshqa</option>
                 </select>
             </div>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label>Phone</label>
-                <input id="f-phone" type="text" value="${escHtml(p.phone || '')}" placeholder="+1-555-0100" />
+                <label>Telefon</label>
+                <input id="f-phone" type="text" value="${escHtml(p.phone || '')}" placeholder="+998-90-123-45-67" />
             </div>
             ${!isClinician ? `
             <div class="form-group">
-                <label>Assigned Doctor *</label>
+                <label>Biriktirilgan shifokor *</label>
                 <select id="f-doctor">
-                    <option value="">— select doctor —</option>
-                    ${doctors.map((d) => `<option value="${d.id}" ${p.doctor_id === d.id ? 'selected' : ''}>${escHtml(d.name)} (${d.specialty})</option>`).join('')}
+                    <option value="">— shifokorni tanlang —</option>
+                    ${doctors.map((d) => `<option value="${d.id}" ${p.doctor_id === d.id ? 'selected' : ''}>${escHtml(d.name)} (${mutaxassislikNomi(d.specialty)})</option>`).join('')}
                 </select>
             </div>
             ` : ''}
         </div>
         ${!isEdit ? `
         <hr style="margin:1rem 0;border:none;border-top:1px solid var(--color-border)" />
-        <p style="font-size:.8rem;font-weight:600;color:var(--color-text-muted);margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.05em">Patient Login Account</p>
+        <p style="font-size:.8rem;font-weight:600;color:var(--color-text-muted);margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.05em">Bemor Login Hisobi</p>
         <div class="form-row">
             <div class="form-group">
-                <label>Username *</label>
-                <input id="f-username" type="text" placeholder="e.g., alice_t" />
+                <label>Foydalanuvchi nomi *</label>
+                <input id="f-username" type="text" placeholder="Masalan: alisher_k" />
             </div>
             <div class="form-group">
-                <label>Password *</label>
-                <input id="f-password" type="password" placeholder="Min 8 characters" />
+                <label>Parol *</label>
+                <input id="f-password" type="password" placeholder="Kamida 8 ta belgi" />
             </div>
         </div>
         ` : ''}
@@ -243,8 +239,8 @@ const Patients = (() => {
             const err = document.getElementById('form-error');
             if (err) {
                 err.textContent = requiresDoctor
-                    ? 'Name, date of birth, gender, and doctor are required.'
-                    : 'Name, date of birth, and gender are required.';
+                    ? 'Ism, tug\'ilgan sana, jinsi va shifokor kiritilishi shart.'
+                    : 'Ism, tug\'ilgan sana va jinsi kiritilishi shart.';
                 err.hidden = false;
             }
             return null;
@@ -258,7 +254,7 @@ const Patients = (() => {
             const password = document.getElementById('f-password')?.value;
             if (!username || !password) {
                 const err = document.getElementById('form-error');
-                if (err) { err.textContent = 'Username and password are required.'; err.hidden = false; }
+                if (err) { err.textContent = 'Foydalanuvchi nomi va parol kiritilishi shart.'; err.hidden = false; }
                 return null;
             }
             body.username = username;
@@ -270,3 +266,21 @@ const Patients = (() => {
 
     return { render, openAddModal, openEditModal, confirmDelete };
 })();
+
+// ── Yordamchi funksiyalar ──────────────────────────────────────────────────
+
+function jinsNomi(val) {
+    const map = { Male: 'Erkak', Female: 'Ayol', Other: 'Boshqa' };
+    return map[val] || val;
+}
+
+function mutaxassislikNomi(val) {
+    const map = {
+        Cardiology:       'Kardiologiya',
+        Neurology:        'Nevrologiya',
+        Dermatology:      'Dermatologiya',
+        Orthopedics:      'Ortopediya',
+        'General Practice': 'Umumiy amaliyot',
+    };
+    return map[val] || val;
+}

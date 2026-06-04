@@ -1,294 +1,289 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CareTrack Clinic — Medical Records</title>
+    <title>CareTrack Klinikasi — Tibbiy Yozuvlar</title>
     <link rel="stylesheet" href="css/styles.css" />
-    <!--
-        Feather Icons (MIT) — loaded from CDN for lightweight SVG icons.
-        No UI framework dependency; all layout is custom CSS Grid/Flexbox.
-    -->
     <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
 </head>
 <body>
 
-<!-- ═══════════════════════ LOGIN SCREEN ════════════════════════════════════ -->
+<!-- ═══════════════════════ KIRISH EKRANI ═══════════════════════════════════ -->
 <div id="login-screen" class="login-screen">
 
-    <!-- Sign In card -->
+    <!-- Kirish kartasi -->
     <div id="login-card" class="login-card">
         <div class="login-logo">
             <span class="logo-icon">⚕</span>
-            <h1>CareTrack <span>Clinic</span></h1>
-            <p>Medical Records Management System</p>
+            <h1>CareTrack <span>Klinikasi</span></h1>
+            <p>Tibbiy Yozuvlar Boshqaruv Tizimi</p>
         </div>
 
         <form id="login-form" novalidate>
             <div class="form-group">
-                <label for="login-username">Username</label>
-                <input type="text"     id="login-username" placeholder="Enter username"  autocomplete="username"  required />
+                <label for="login-username">Foydalanuvchi nomi</label>
+                <input type="text"     id="login-username" placeholder="Foydalanuvchi nomini kiriting"  autocomplete="username"  required />
             </div>
             <div class="form-group">
-                <label for="login-password">Password</label>
-                <input type="password" id="login-password" placeholder="Enter password"  autocomplete="current-password" required />
+                <label for="login-password">Parol</label>
+                <input type="password" id="login-password" placeholder="Parolni kiriting"  autocomplete="current-password" required />
             </div>
             <div id="login-error" class="alert alert-error" hidden></div>
             <button type="submit" id="login-btn" class="btn btn-primary btn-full">
-                <span id="login-btn-text">Sign In</span>
+                <span id="login-btn-text">Kirish</span>
                 <span id="login-spinner" class="spinner" hidden></span>
             </button>
         </form>
 
         <p class="login-hint">
-            Demo — Admin: <code>admin / Admin@1234</code><br/>
-            Clinician: <code>dr_wilson / Admin@1234</code><br/>
+            Admin: <code>admin / Admin@1234</code><br/>
             Receptionist: <code>receptionist / Admin@1234</code>
         </p>
         <p style="text-align:center;margin-top:1rem;font-size:.875rem">
-            New patient?
-            <a href="#" id="goto-register" style="color:var(--color-primary);font-weight:600">Register here →</a>
+            Yangi bemorsiz?
+            <a href="#" id="goto-register" style="color:var(--color-primary);font-weight:600">Ro'yxatdan o'ting →</a>
         </p>
     </div>
 
-    <!-- Patient Registration card -->
+    <!-- Bemor ro'yxatdan o'tish kartasi -->
     <div id="register-card" class="login-card" hidden>
         <div class="login-logo">
             <span class="logo-icon">⚕</span>
-            <h1>CareTrack <span>Clinic</span></h1>
-            <p>Patient Registration</p>
+            <h1>CareTrack <span>Klinikasi</span></h1>
+            <p>Bemor Ro'yxatdan O'tishi</p>
         </div>
 
         <form id="register-form" novalidate>
             <div class="form-group">
-                <label for="reg-name">Full Name *</label>
-                <input type="text" id="reg-name" placeholder="Your full name" required />
+                <label for="reg-name">To'liq ism *</label>
+                <input type="text" id="reg-name" placeholder="To'liq ismingiz" required />
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label for="reg-dob">Date of Birth *</label>
+                    <label for="reg-dob">Tug'ilgan sana *</label>
                     <input type="date" id="reg-dob" required />
                 </div>
                 <div class="form-group">
-                    <label for="reg-gender">Gender *</label>
+                    <label for="reg-gender">Jinsi *</label>
                     <select id="reg-gender">
-                        <option value="">— select —</option>
-                        <option>Male</option>
-                        <option>Female</option>
-                        <option>Other</option>
+                        <option value="">— tanlang —</option>
+                        <option value="Male">Erkak</option>
+                        <option value="Female">Ayol</option>
+                        <option value="Other">Boshqa</option>
                     </select>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label for="reg-phone">Phone</label>
-                    <input type="text" id="reg-phone" placeholder="+1-555-0100" />
+                    <label for="reg-phone">Telefon</label>
+                    <input type="text" id="reg-phone" placeholder="+998-90-123-45-67" />
                 </div>
                 <div class="form-group">
-                    <label for="reg-doctor">Select Doctor *</label>
+                    <label for="reg-doctor">Shifokorni tanlang *</label>
                     <select id="reg-doctor">
-                        <option value="">Loading…</option>
+                        <option value="">Yuklanmoqda…</option>
                     </select>
                 </div>
             </div>
             <hr style="margin:.75rem 0;border:none;border-top:1px solid var(--color-border)" />
             <div class="form-row">
                 <div class="form-group">
-                    <label for="reg-username">Username *</label>
-                    <input type="text" id="reg-username" placeholder="Choose a username" autocomplete="username" required />
+                    <label for="reg-username">Foydalanuvchi nomi *</label>
+                    <input type="text" id="reg-username" placeholder="Foydalanuvchi nomini tanlang" autocomplete="username" required />
                 </div>
                 <div class="form-group">
-                    <label for="reg-password">Password *</label>
-                    <input type="password" id="reg-password" placeholder="Min 8 characters" autocomplete="new-password" required />
+                    <label for="reg-password">Parol *</label>
+                    <input type="password" id="reg-password" placeholder="Kamida 8 ta belgi" autocomplete="new-password" required />
                 </div>
             </div>
             <div id="register-error" class="alert alert-error" hidden></div>
             <button type="submit" id="register-btn" class="btn btn-primary btn-full">
-                <span id="register-btn-text">Create Account</span>
+                <span id="register-btn-text">Hisob yaratish</span>
                 <span id="register-spinner" class="spinner" hidden></span>
             </button>
         </form>
 
         <p style="text-align:center;margin-top:1rem;font-size:.875rem">
-            Already have an account?
-            <a href="#" id="goto-login" style="color:var(--color-primary);font-weight:600">← Sign In</a>
+            Hisobingiz bormi?
+            <a href="#" id="goto-login" style="color:var(--color-primary);font-weight:600">← Kirish</a>
         </p>
     </div>
 
 </div>
 
-<!-- ═══════════════════════ MAIN APP ════════════════════════════════════════ -->
+<!-- ═══════════════════════ ASOSIY ILOVA ════════════════════════════════════ -->
 <div id="app" class="app-layout" hidden>
 
-    <!-- ── Sidebar Navigation ────────────────────────────────────────────── -->
+    <!-- ── Yon panel ─────────────────────────────────────────────────────── -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <span class="logo-icon">⚕</span>
             <span class="logo-text">CareTrack</span>
-            <button class="sidebar-close" id="sidebar-close" aria-label="Close menu">
+            <button class="sidebar-close" id="sidebar-close" aria-label="Menyuni yopish">
                 <i data-feather="x"></i>
             </button>
         </div>
 
         <nav class="sidebar-nav">
             <a href="#" class="nav-item active" data-view="dashboard" data-roles="admin,clinician,receptionist">
-                <i data-feather="grid"></i> <span>Dashboard</span>
+                <i data-feather="grid"></i> <span>Boshqaruv paneli</span>
             </a>
             <a href="#" class="nav-item" data-view="patients" data-roles="admin,clinician,receptionist">
-                <i data-feather="users"></i> <span>Patients</span>
+                <i data-feather="users"></i> <span>Bemorlar</span>
             </a>
             <a href="#" class="nav-item" data-view="doctors" data-roles="admin,receptionist">
-                <i data-feather="user-check"></i> <span>Doctors</span>
+                <i data-feather="user-check"></i> <span>Shifokorlar</span>
             </a>
             <a href="#" class="nav-item" data-view="diagnoses" data-roles="admin,clinician">
-                <i data-feather="activity"></i> <span>Diagnoses</span>
+                <i data-feather="activity"></i> <span>Tashxislar</span>
             </a>
-            <!-- Patient portal nav -->
+            <!-- Bemor portali -->
             <a href="#" class="nav-item" data-view="my-profile" data-roles="patient">
-                <i data-feather="user"></i> <span>My Profile</span>
+                <i data-feather="user"></i> <span>Mening profilim</span>
             </a>
         </nav>
 
         <div class="sidebar-footer">
             <div class="user-chip" id="user-chip"></div>
             <button class="btn btn-ghost btn-sm" id="logout-btn">
-                <i data-feather="log-out"></i> Logout
+                <i data-feather="log-out"></i> Chiqish
             </button>
         </div>
     </aside>
 
-    <!-- ── Main Content ───────────────────────────────────────────────────── -->
+    <!-- ── Asosiy kontent ─────────────────────────────────────────────────── -->
     <main class="main-content">
 
-        <!-- Top bar -->
+        <!-- Yuqori panel -->
         <header class="topbar">
-            <button class="topbar-menu-btn" id="menu-toggle" aria-label="Open menu">
+            <button class="topbar-menu-btn" id="menu-toggle" aria-label="Menyuni ochish">
                 <i data-feather="menu"></i>
             </button>
-            <h2 class="topbar-title" id="page-title">Dashboard</h2>
+            <h2 class="topbar-title" id="page-title">Boshqaruv paneli</h2>
             <div class="topbar-actions">
                 <span class="role-badge" id="role-badge"></span>
             </div>
         </header>
 
-        <!-- Alert banner (success / error notifications) -->
+        <!-- Bildirishnoma banneri -->
         <div id="app-alert" class="app-alert" hidden></div>
 
-        <!-- ── Views (only one visible at a time) ────────────────────────── -->
+        <!-- ── Ko'rinishlar ──────────────────────────────────────────────── -->
 
-        <!-- Dashboard -->
+        <!-- Boshqaruv paneli -->
         <section id="view-dashboard" class="view active">
             <div class="stats-grid" id="stats-grid">
                 <div class="stat-card" id="stat-doctors-card">
                     <div class="stat-icon blue"><i data-feather="user-check"></i></div>
                     <div class="stat-info">
                         <span class="stat-number" id="stat-doctors">—</span>
-                        <span class="stat-label">Doctors</span>
+                        <span class="stat-label">Shifokorlar</span>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon green"><i data-feather="users"></i></div>
                     <div class="stat-info">
                         <span class="stat-number" id="stat-patients">—</span>
-                        <span class="stat-label">Patients</span>
+                        <span class="stat-label">Bemorlar</span>
                     </div>
                 </div>
                 <div class="stat-card" id="stat-diagnoses-card">
                     <div class="stat-icon orange"><i data-feather="activity"></i></div>
                     <div class="stat-info">
                         <span class="stat-number" id="stat-diagnoses">—</span>
-                        <span class="stat-label">Diagnoses</span>
+                        <span class="stat-label">Tashxislar</span>
                     </div>
                 </div>
                 <div class="stat-card" id="stat-pending-card">
                     <div class="stat-icon orange"><i data-feather="clock"></i></div>
                     <div class="stat-info">
                         <span class="stat-number" id="stat-pending">—</span>
-                        <span class="stat-label">Pending</span>
+                        <span class="stat-label">Kutilmoqda</span>
                     </div>
                 </div>
                 <div class="stat-card" id="stat-completed-card">
                     <div class="stat-icon green"><i data-feather="check-circle"></i></div>
                     <div class="stat-info">
                         <span class="stat-number" id="stat-completed">—</span>
-                        <span class="stat-label">Completed</span>
+                        <span class="stat-label">Yakunlangan</span>
                     </div>
                 </div>
             </div>
             <div class="dashboard-tables">
                 <div class="card">
-                    <div class="card-header"><h3>Recent Patients</h3></div>
+                    <div class="card-header"><h3>So'nggi bemorlar</h3></div>
                     <div id="recent-patients-table"></div>
                 </div>
             </div>
         </section>
 
-        <!-- Doctors -->
+        <!-- Shifokorlar -->
         <section id="view-doctors" class="view" hidden>
             <div class="view-toolbar">
                 <div class="search-group">
                     <i data-feather="search"></i>
-                    <input type="text" id="doctor-search" placeholder="Search by name…" />
+                    <input type="text" id="doctor-search" placeholder="Ism bo'yicha qidiring…" />
                 </div>
                 <select id="doctor-specialty-filter" class="filter-select">
-                    <option value="">All Specialties</option>
-                    <option>Cardiology</option>
-                    <option>Neurology</option>
-                    <option>Dermatology</option>
-                    <option>Orthopedics</option>
-                    <option>General Practice</option>
+                    <option value="">Barcha mutaxassisliklar</option>
+                    <option value="Cardiology">Kardiologiya</option>
+                    <option value="Neurology">Nevrologiya</option>
+                    <option value="Dermatology">Dermatologiya</option>
+                    <option value="Orthopedics">Ortopediya</option>
+                    <option value="General Practice">Umumiy amaliyot</option>
                 </select>
                 <button class="btn btn-primary" id="add-doctor-btn" data-roles="admin">
-                    <i data-feather="plus"></i> Add Doctor
+                    <i data-feather="plus"></i> Shifokor qo'shish
                 </button>
             </div>
             <div id="doctors-table-container" class="table-container"></div>
         </section>
 
-        <!-- Patients -->
+        <!-- Bemorlar -->
         <section id="view-patients" class="view" hidden>
             <div class="view-toolbar">
                 <div class="search-group">
                     <i data-feather="search"></i>
-                    <input type="text" id="patient-search" placeholder="Search by name…" />
+                    <input type="text" id="patient-search" placeholder="Ism bo'yicha qidiring…" />
                 </div>
                 <select id="patient-gender-filter" class="filter-select">
-                    <option value="">All Genders</option>
-                    <option>Male</option>
-                    <option>Female</option>
-                    <option>Other</option>
+                    <option value="">Barcha jinslar</option>
+                    <option value="Male">Erkak</option>
+                    <option value="Female">Ayol</option>
+                    <option value="Other">Boshqa</option>
                 </select>
                 <button class="btn btn-primary" id="add-patient-btn" data-roles="admin,receptionist">
-                    <i data-feather="plus"></i> Register Patient
+                    <i data-feather="plus"></i> Bemor qo'shish
                 </button>
             </div>
             <div id="patients-table-container" class="table-container"></div>
         </section>
 
-        <!-- Diagnoses -->
+        <!-- Tashxislar -->
         <section id="view-diagnoses" class="view" hidden>
             <div class="view-toolbar">
                 <div class="search-group">
                     <i data-feather="search"></i>
-                    <input type="text" id="diagnosis-search" placeholder="Search ICD code or description…" />
+                    <input type="text" id="diagnosis-search" placeholder="ICD kodi yoki tavsif bo'yicha qidiring…" />
                 </div>
                 <select id="diagnosis-severity-filter" class="filter-select">
-                    <option value="">All Severities</option>
-                    <option>Low</option>
-                    <option>Medium</option>
-                    <option>High</option>
+                    <option value="">Barcha darajalar</option>
+                    <option value="Low">Engil</option>
+                    <option value="Medium">O'rta</option>
+                    <option value="High">Og'ir</option>
                 </select>
                 <button class="btn btn-primary" id="add-diagnosis-btn" data-roles="admin">
-                    <i data-feather="plus"></i> Add Diagnosis
+                    <i data-feather="plus"></i> Tashxis qo'shish
                 </button>
             </div>
             <div id="diagnoses-table-container" class="table-container"></div>
         </section>
 
-        <!-- Patient Profile (nested view — rendered on-demand) -->
+        <!-- Bemor profili -->
         <section id="view-patient-profile" class="view" hidden>
             <button class="btn btn-ghost btn-sm back-btn" id="back-from-profile" data-roles="admin,clinician,receptionist">
-                <i data-feather="arrow-left"></i> Back to Patients
+                <i data-feather="arrow-left"></i> Bemorlarga qaytish
             </button>
             <div id="patient-profile-content"></div>
         </section>
@@ -300,20 +295,20 @@
 <div id="modal-overlay" class="modal-overlay" hidden>
     <div class="modal" id="modal" role="dialog" aria-modal="true">
         <div class="modal-header">
-            <h3 id="modal-title">Modal Title</h3>
-            <button class="modal-close" id="modal-close" aria-label="Close modal">
+            <h3 id="modal-title">Modal</h3>
+            <button class="modal-close" id="modal-close" aria-label="Modalni yopish">
                 <i data-feather="x"></i>
             </button>
         </div>
         <div class="modal-body" id="modal-body"></div>
         <div class="modal-footer" id="modal-footer">
-            <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
-            <button class="btn btn-primary" id="modal-confirm">Save</button>
+            <button class="btn btn-ghost" id="modal-cancel">Bekor qilish</button>
+            <button class="btn btn-primary" id="modal-confirm">Saqlash</button>
         </div>
     </div>
 </div>
 
-<!-- ── JS modules (order matters: api → auth → feature modules → app) ──── -->
+<!-- JS modullar (tartib muhim: api → auth → feature modules → app) -->
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/doctors.js"></script>

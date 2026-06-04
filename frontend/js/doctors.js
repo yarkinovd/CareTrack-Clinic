@@ -64,7 +64,7 @@ const Doctors = (() => {
                     </tbody>
                 </table>
             `;
-            feather.replace();
+            renderIcons();
         } catch (err) {
             container.innerHTML = errorHTML(err.message);
         }
@@ -89,7 +89,7 @@ const Doctors = (() => {
             const res = await Api.doctors.getOne(id);
             const d   = res.data;
             Modal.setBody(formHTML(d));
-            feather.replace();
+            renderIcons();
         } catch (err) {
             Modal.setBody(errorHTML(err.message));
         }

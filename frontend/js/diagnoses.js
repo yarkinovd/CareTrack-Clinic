@@ -70,7 +70,7 @@ const Diagnoses = (() => {
                     </tbody>
                 </table>
             `;
-            feather.replace();
+            renderIcons();
         } catch (err) {
             container.innerHTML = errorHTML(err.message);
         }
@@ -82,7 +82,7 @@ const Diagnoses = (() => {
         Modal.open({ title: 'Add Diagnosis', body: loadingHTML(), onConfirm: handleCreate });
         const patients = await fetchPatients();
         Modal.setBody(formHTML({ patient_id: prefilledPatientId }, patients));
-        feather.replace();
+        renderIcons();
     };
 
     // ── Modal: Edit Diagnosis ─────────────────────────────────────────────
@@ -91,7 +91,7 @@ const Diagnoses = (() => {
         Modal.open({ title: 'Edit Diagnosis', body: loadingHTML(), onConfirm: () => handleUpdate(id) });
         const [dRes, patients] = await Promise.all([Api.diagnoses.getOne(id), fetchPatients()]);
         Modal.setBody(formHTML(dRes.data, patients));
-        feather.replace();
+        renderIcons();
     };
 
     // ── Modal: Confirm Delete ─────────────────────────────────────────────

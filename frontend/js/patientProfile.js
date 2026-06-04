@@ -138,7 +138,7 @@ const PatientProfile = (() => {
                     }
                 </div>
             `;
-            feather.replace();
+            renderIcons();
         } catch (err) {
             container.innerHTML = errorHTML(err.message);
         }

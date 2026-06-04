@@ -17,6 +17,11 @@
 
 const $ = (id) => document.getElementById(id);
 
+// Safe feather icon renderer — silently skips if CDN failed to load
+const renderIcons = () => {
+    try { if (typeof feather !== 'undefined') feather.replace(); } catch (_) {}
+};
+
 // ═══════════════════════════════════════════════════════════════════════════
 // SHARED UTILITIES (used by all feature modules via global scope)
 // ═══════════════════════════════════════════════════════════════════════════
@@ -91,7 +96,7 @@ const Modal = (() => {
         confirmBtn.textContent = confirmLabel;
         confirmBtn.className = `btn ${confirmClass}`;
         overlay.hidden       = false;
-        feather.replace();
+        renderIcons();
     };
 
     const close = () => {
@@ -102,7 +107,7 @@ const Modal = (() => {
 
     const setBody = (html) => {
         body.innerHTML = html;
-        feather.replace();
+        renderIcons();
     };
 
     const showError = (msg) => {
@@ -139,16 +144,18 @@ const App = (() => {
     // ── Bootstrap ─────────────────────────────────────────────────────────
 
     const init = () => {
+        // Bind all event listeners FIRST — independent of auth state
+        bindLoginForm();
+        bindNavigation();
+        bindSidebar();
+        bindToolbars();
+
         if (Auth.isLoggedIn()) {
             showApp();
         } else {
             $('login-screen').hidden = false;
             $('app').hidden          = true;
         }
-        bindLoginForm();
-        bindNavigation();
-        bindSidebar();
-        bindToolbars();
     };
 
     // ── Login ──────────────────────────────────────────────────────────────
@@ -198,7 +205,7 @@ const App = (() => {
         }
 
         navigate('dashboard');
-        feather.replace();
+        renderIcons();
     };
 
     // ── Navigation ────────────────────────────────────────────────────────
@@ -325,7 +332,7 @@ const App = (() => {
                     </tbody>
                   </table>`
                 : emptyHTML('No patients yet.');
-            feather.replace();
+            renderIcons();
         } catch (err) {
             console.error('Dashboard load error:', err);
         }

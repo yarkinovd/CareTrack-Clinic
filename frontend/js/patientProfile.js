@@ -121,7 +121,7 @@ const PatientProfile = (() => {
                                 </div>
                                 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.5rem">
                                     <span class="badge badge-${d.severity_level.toLowerCase()}">${d.severity_level}</span>
-                                    ${canClinician ? `
+                                    ${canEditPatient ? `
                                         <div class="table-actions">
                                             <button class="btn btn-secondary btn-icon" title="Edit"
                                                 onclick="Diagnoses.openEditModal(${d.id})">

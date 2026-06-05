@@ -121,7 +121,7 @@ const createPatient = async (req, res, next) => {
                 const patRow = await client.query(
                     `INSERT INTO patients (name, dob, phone, gender, doctor_id)
                      VALUES ($1, $2, $3, $4, $5)
-                     RETURNING id, name, dob, phone, gender, doctor_id, registered_at, created_at, updated_at`,
+                     RETURNING id, name, dob, phone, gender, doctor_id, created_at, updated_at`,
                     [name, dob, phone || null, gender, Number(doctor_id)]
                 );
                 const patient = patRow.rows[0];
